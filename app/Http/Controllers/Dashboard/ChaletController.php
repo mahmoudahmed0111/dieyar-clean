@@ -26,10 +26,15 @@ class ChaletController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:chalets,code',
+            'floor' => 'nullable|string|max:100',
+            'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'status' => 'required|in:available,unavailable',
             'type' => 'nullable|in:apartment,studio,villa',
+            'is_cleaned' => 'boolean',
+            'is_booked' => 'boolean',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
             'videos.*' => 'nullable|file|mimes:mp4,avi,mov|max:20480',
         ]);
@@ -49,6 +54,12 @@ class ChaletController extends Controller
         return redirect()->route('dashboard.chalets.index')->with('success', __('Chalet created successfully.'));
     }
 
+    public function show(Chalet $chalet)
+    {
+        $chalet->load(['images', 'videos']);
+        return view('dashboard.chalets.show', compact('chalet'));
+    }
+
     public function edit(Chalet $chalet)
     {
         $chalet->load(['images', 'videos']);
@@ -59,10 +70,15 @@ class ChaletController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'code' => 'required|string|max:50|unique:chalets,code,' . $chalet->id,
+            'floor' => 'nullable|string|max:100',
+            'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
             'type' => 'nullable|in:apartment,studio,villa',
             'status' => 'required|in:available,unavailable',
             'description' => 'nullable|string',
+            'is_cleaned' => 'boolean',
+            'is_booked' => 'boolean',
             'images.*' => 'nullable|image|mimes:jpg,jpeg,png|max:4096',
         ]);
         $chalet->update($validated);

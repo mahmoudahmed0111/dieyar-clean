@@ -8,7 +8,18 @@ use App\Models\ChaletVideo;
 
 class Chalet extends Model
 {
-    protected $fillable = ['name', 'location', 'description', 'status', 'type'];
+    protected $fillable = [
+        'name',
+        'code',
+        'floor',
+        'building',
+        'location',
+        'description',
+        'status',
+        'type',
+        'is_cleaned',
+        'is_booked'
+    ];
 
     public function images()
     {

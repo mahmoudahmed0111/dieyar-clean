@@ -328,5 +328,22 @@ return [
         'whatsapp_number_link' => 'رابط واتساب',
         'logo' => 'الشعار',
         'save_settings' => 'حفظ الإعدادات',
+        'code' => 'الكود',
+        'floor' => 'الطابق',
+        'building' => 'المبنى',
+        'cleaned' => 'منظف',
+        'booked' => 'محجوز',
+        'enter_code' => 'أدخل الكود',
+        'enter_floor' => 'أدخل الطابق',
+        'enter_building' => 'أدخل المبنى',
+        'enter_cleaned' => 'أدخل منظف',
+        'enter_booked' => 'أدخل محجوز',
+        'yes' => 'نعم',
+        'no' => 'لا',
+
+        'is_cleaned' => 'منظف',
+        'is_booked' => 'محجوز',
+        'mark_as_cleaned' => 'تحديث منظف',
+        'mark_as_booked' => 'تحديث محجوز',
 
 ];

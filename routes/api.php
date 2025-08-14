@@ -26,6 +26,13 @@ use App\Http\Controllers\API\RegularCleaningController;
 // Routes للضيوف (بدون مصادقة)
 Route::post('/login', [AuthController::class, 'login']);
 
+// Chalets routes للضيوف (بدون مصادقة)
+Route::prefix('chalets')->group(function () {
+    Route::get('/', [ChaletController::class, 'index']);
+    Route::get('/stats', [ChaletController::class, 'stats']);
+    Route::get('/{chalet}', [ChaletController::class, 'show']);
+});
+
 // Routes محمية بالمصادقة
 Route::middleware('auth:sanctum')->group(function () {
 

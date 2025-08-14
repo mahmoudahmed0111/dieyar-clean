@@ -28,6 +28,27 @@
                     @error('name')<span class="error-message">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group">
+                    <label class="form-label">{{ __('trans.code') }} <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" name="code" class="form-input @error('code') error @enderror" value="{{ old('code') }}" required placeholder="{{ __('trans.enter_chalet_code') }}">
+                    </div>
+                    @error('code')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('trans.floor') }}</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="floor" class="form-input @error('floor') error @enderror" value="{{ old('floor') }}" placeholder="{{ __('trans.enter_floor') }}">
+                    </div>
+                    @error('floor')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('trans.building') }}</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="building" class="form-input @error('building') error @enderror" value="{{ old('building') }}" placeholder="{{ __('trans.enter_building') }}">
+                    </div>
+                    @error('building')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
                     <label class="form-label">{{ __('trans.location') }}</label>
                     <div class="input-wrapper">
                         <input type="text" name="location" class="form-input @error('location') error @enderror" value="{{ old('location') }}" placeholder="{{ __('trans.enter_location') }}">
@@ -55,6 +76,28 @@
                         </select>
                     </div>
                     @error('status')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('trans.is_cleaned') }}</label>
+                    <div class="input-wrapper">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="is_cleaned" value="1" {{ old('is_cleaned', true) ? 'checked' : '' }}>
+                            <span class="checkmark"></span>
+                            {{ __('trans.mark_as_cleaned') }}
+                        </label>
+                    </div>
+                    @error('is_cleaned')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{ __('trans.is_booked') }}</label>
+                    <div class="input-wrapper">
+                        <label class="checkbox-wrapper">
+                            <input type="checkbox" name="is_booked" value="1" {{ old('is_booked', false) ? 'checked' : '' }}>
+                            <span class="checkmark"></span>
+                            {{ __('trans.mark_as_booked') }}
+                        </label>
+                    </div>
+                    @error('is_booked')<span class="error-message">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group">
                     <label class="form-label">{{ __('trans.description') }}</label>

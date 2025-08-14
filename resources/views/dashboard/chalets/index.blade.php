@@ -21,10 +21,15 @@
 @php
     $columns = [
         '#' => 'id',
+        'code' => __('trans.code'),
         'name' => __('trans.name'),
-        'location' => __('trans.location'),
+        // 'floor' => __('trans.floor'),
+        // 'building' => __('trans.building'),
+        // 'location' => __('trans.location'),
         'type' => __('trans.type'),
-        'status' => __('trans.status'),
+        // 'status' => __('trans.status'),
+        'cleaned' => __('trans.cleaned'),
+        'booked' => __('trans.booked'),
         'images' => __('trans.images'),
         'videos' => __('trans.videos'),
         'actions' => __('trans.actions'),
@@ -37,10 +42,15 @@
         ];
         return [
             '#' => $chalet->id,
+            'code' => '<span class="badge badge-info">'.$chalet->code.'</span>',
             'name' => '<div class="user-info">'.$chalet->name.'</div>',
-            'location' => $chalet->location,
+            // 'floor' => $chalet->floor ?: '-',
+            // 'building' => $chalet->building ?: '-',
+            // 'location' => $chalet->location,
             'type' => $chalet->type ? $typeLabels[$chalet->type] : '-',
-            'status' => '<span class="status-badge status-'.($chalet->status == 'available' ? 'success' : 'danger').'">'.__($chalet->status).'</span>',
+            // 'status' => '<span class="status-badge status-'.($chalet->status == 'available' ? 'success' : 'danger').'">'.__($chalet->status).'</span>',
+            'cleaned' => '<span class="status-badge status-'.($chalet->is_cleaned ? 'success' : 'warning').'">'.($chalet->is_cleaned ? __('trans.yes') : __('trans.no')).'</span>',
+            'booked' => '<span class="status-badge status-'.($chalet->is_booked ? 'danger' : 'success').'">'.($chalet->is_booked ? __('trans.yes') : __('trans.no')).'</span>',
             'images' => collect($chalet->images)->map(function($img, $i) use ($chalet) {
                 return '<a href="'.asset('storage/'.$img->image).'" class="glightbox" data-gallery="chalet-'.$chalet->id.'"><img src="'.asset('storage/'.$img->image).'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;cursor:pointer;" alt="img"></a>';
             })->implode(' '),
