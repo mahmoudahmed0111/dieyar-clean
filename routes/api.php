@@ -3,14 +3,14 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\Api\ChaletController;
-use App\Http\Controllers\Api\DamageController;
-use App\Http\Controllers\Api\SettingController;
-use App\Http\Controllers\Api\InventoryController;
-use App\Http\Controllers\Api\MaintenanceController;
-use App\Http\Controllers\Api\PestControlController;
-use App\Http\Controllers\Api\DeepCleaningController;
-use App\Http\Controllers\Api\RegularCleaningController;
+use App\Http\Controllers\API\ChaletController;
+use App\Http\Controllers\API\DamageController;
+use App\Http\Controllers\API\SettingController;
+use App\Http\Controllers\API\InventoryController;
+use App\Http\Controllers\API\MaintenanceController;
+use App\Http\Controllers\API\PestControlController;
+use App\Http\Controllers\API\DeepCleaningController;
+use App\Http\Controllers\API\RegularCleaningController;
 
 /*
 |--------------------------------------------------------------------------

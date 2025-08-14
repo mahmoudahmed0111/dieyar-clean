@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\API\ResponseTrait;
 use App\Http\Controllers\Controller;
@@ -15,10 +15,9 @@ class SettingController extends Controller
     /**
      * جلب الإعدادات
      *
-     * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function index(Request $request)
+    public function index()
     {
         $settings = Setting::select(['name', 'phone', 'email', 'address', 'logo'])->first();
 
