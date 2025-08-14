@@ -18,35 +18,56 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'phone' => 'required|string',
+        $validator = validator($request->all(), [
+            'email' => 'sometimes|email',
+            'phone' => 'sometimes|string|max:20',
             'password' => 'required|string|min:6',
-        ], [
-            'phone.required' => 'رقم الهاتف مطلوب',
-            'password.required' => 'كلمة المرور مطلوبة',
-            'password.min' => 'كلمة المرور يجب أن تكون 6 أحرف على الأقل',
         ]);
 
         if ($validator->fails()) {
-            return $this->apiResponse(null, $validator->errors()->first(), 422);
+            return $this->apiResponse(null, $validator->errors()->first(), 403);
         }
 
-        $cleaner = Cleaner::where('phone', $request->phone)->first();
-
-        if (!$cleaner || !Hash::check($request->password, $cleaner->password)) {
-            return $this->apiResponse(null, 'رقم الهاتف أو كلمة المرور غير صحيحة', 401);
+        // التحقق من أن المستخدم أرسل إما email أو phone
+        if (!$request->email && !$request->phone) {
+            return $this->apiResponse(null, 'يجب إرسال البريد الإلكتروني أو رقم الهاتف', 403);
         }
 
-        if ($cleaner->status !== 'active') {
-            return $this->apiResponse(null, 'الحساب غير مفعل', 403);
+        // البحث عن المريض بناءً على البيانات المرسلة
+        if ($request->email) {
+            $cleaner = Cleaner::where('email', $request->email)->first();
+        } elseif ($request->phone) {
+            $cleaner = Cleaner::where('phone', $request->phone)->first();
         }
 
-        $token = $cleaner->createToken('cleaner-token')->plainTextToken;
+        if (!$cleaner) {
+            $errorMessage = $request->email ? 'البريد الإلكتروني غير مسجل لدينا' : 'رقم الهاتف غير مسجل لدينا';
+            return $this->apiResponse(null, $errorMessage, 404);
+        }
 
+        // التحقق من صحة كلمة المرور
+        if (!Hash::check($request->password, $cleaner->password)) {
+            $errorMessage = $request->email ? 'كلمة المرور غير صحيحة للبريد الإلكتروني' : 'كلمة المرور غير صحيحة لرقم الهاتف';
+            return $this->apiResponse(null, $errorMessage, 403);
+        }
+
+        $token = $cleaner->createToken('cleaner')->plainTextToken;
 
         return response()->json([
             'message' => 'تم تسجيل الدخول بنجاح',
-            'token' => $token,
+            'access_token' => $token,
+            'status' => 200,
+            'data' => [
+                'id' => $cleaner->id,
+                'name' => $cleaner->name,
+                'phone' => $cleaner->phone,
+                'email' => $cleaner->email,
+                'national_id' => $cleaner->national_id ?? null,
+                'address' => $cleaner->address ?? null,
+                'hire_date' => $cleaner->hire_date->format('Y-m-d') ?? null,
+                'status' => $cleaner->status ?? null,
+                'image' => $cleaner->image_url ?? null,
+            ]
         ], 200);
     }
 
@@ -58,6 +79,17 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return $this->apiResponse(null, 'تم تسجيل الخروج بنجاح');
+    }
+
+    public function deleteAccount(Request $request)
+    {
+        $cleaner = $request->user();
+
+        $cleaner->currentAccessToken()->delete();
+
+        $cleaner->delete();
+
+        return $this->apiResponse(null, 'تم حذف الحساب بنجاح', 200);
     }
 
     /**
