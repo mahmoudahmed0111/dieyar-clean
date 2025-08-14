@@ -52,13 +52,14 @@ GET /api/chalets?search=شاطئ&status=available&type=villa&per_page=10
                 "updated_at": "2025-08-14 22:15:18"
             }
         ],
+        "search_results_count": 5,
         "pagination": {
             "current_page": 1,
-            "last_page": 5,
+            "last_page": 1,
             "per_page": 15,
-            "total": 75,
+            "total": 5,
             "from": 1,
-            "to": 15
+            "to": 5
         }
     },
     "message": "تم جلب الشاليهات بنجاح",
@@ -196,3 +197,4 @@ GET /api/chalets?search=مبنى أ
 4. التواريخ يتم إرجاعها بصيغة `Y-m-d H:i:s`
 5. Boolean values يتم إرجاعها كـ true/false
 6. Pagination متاح لجميع النتائج
+7. `search_results_count` يحتوي على إجمالي عدد العقارات التي تم العثور عليها في البحث

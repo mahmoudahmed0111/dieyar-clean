@@ -79,6 +79,7 @@ class ChaletController extends Controller
 
         return $this->apiResponse([
             'chalets' => $chalets->items(),
+            'search_results_count' => $chalets->total(), // عدد العقارات التي تم العثور عليها
             'pagination' => [
                 'current_page' => $chalets->currentPage(),
                 'last_page' => $chalets->lastPage(),
