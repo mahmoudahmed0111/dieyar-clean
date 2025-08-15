@@ -30,6 +30,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('chalets')->group(function () {
     Route::get('/', [ChaletController::class, 'index']);
     Route::get('/stats', [ChaletController::class, 'stats']);
+    Route::get('/info', [ChaletController::class, 'chaletInfo']);
     Route::get('/{chalet}', [ChaletController::class, 'show']);
 });
 
