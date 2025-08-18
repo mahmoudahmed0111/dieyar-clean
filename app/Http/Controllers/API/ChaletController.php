@@ -183,6 +183,7 @@ class ChaletController extends Controller
             'chalet_id' => 'required|exists:chalets,id',
             'cleaning_type' => 'required|in:regular,deep',
             'cleaning_date' => 'required|date',
+            'media_type' => 'required|in:before,after',
         ], [
             'chalet_id.required' => 'معرف الشاليه مطلوب',
             'chalet_id.exists' => 'الشاليه غير موجود',
@@ -190,6 +191,8 @@ class ChaletController extends Controller
             'cleaning_type.in' => 'نوع النظافة يجب أن يكون regular أو deep',
             'cleaning_date.required' => 'تاريخ النظافة مطلوب',
             'cleaning_date.date' => 'تاريخ النظافة غير صحيح',
+            'media_type.required' => 'نوع الوسائط مطلوب',
+            'media_type.in' => 'نوع الوسائط يجب أن يكون before أو after',
         ]);
 
         if ($validator->fails()) {
@@ -199,6 +202,7 @@ class ChaletController extends Controller
         $chaletId = $request->chalet_id;
         $cleaningType = $request->cleaning_type;
         $cleaningDate = $request->cleaning_date;
+        $mediaType = $request->media_type;
 
         // جلب بيانات الشاليه
         $chalet = Chalet::with(['images', 'videos'])->find($chaletId);
@@ -213,96 +217,88 @@ class ChaletController extends Controller
             ->whereDate('created_at', $cleaningDate)
             ->first();
 
-        // جلب الصور والفيديوهات قبل النظافة (الافتراضية من الشاليه)
-        $beforeImages = $chalet->images->map(function ($image) {
-            return [
-                'id' => $image->id,
-                'image' => asset('storage/' . $image->image),
-                // 'created_at' => $image->created_at->format('Y-m-d H:i:s'),
-                // 'source' => 'chalet_original'
-            ];
-        });
+        // تهيئة المتغيرات للوسائط
+        $images = collect();
+        $videos = collect();
 
-        $beforeVideos = $chalet->videos->map(function ($video) {
-            return [
-                'id' => $video->id,
-                'video' => asset('storage/' . $video->video),
-                // 'created_at' => $video->created_at->format('Y-m-d H:i:s'),
-                // 'source' => 'chalet_original'
-            ];
-        });
+        if ($mediaType === 'before') {
+            // جلب الصور والفيديوهات قبل النظافة (الافتراضية من الشاليه)
+            $images = $chalet->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image' => asset('storage/' . $image->image),
+                ];
+            });
 
-        // جلب الصور والفيديوهات بعد النظافة
-        $afterImages = collect();
-        $afterVideos = collect();
+            $videos = $chalet->videos->map(function ($video) {
+                return [
+                    'id' => $video->id,
+                    'video' => asset('storage/' . $video->video),
+                ];
+            });
 
-        if ($cleaningRecord) {
-            // جلب الصور والفيديوهات قبل النظافة من جداول النظافة
-            $cleaningBeforeImages = DB::table($cleaningType . '_cleaning_images')
-                ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
-                ->where('type', 'before')
-                ->get();
+            // إذا وجد سجل نظافة، جلب الصور والفيديوهات قبل النظافة من جداول النظافة
+            if ($cleaningRecord) {
+                $cleaningBeforeImages = DB::table($cleaningType . '_cleaning_images')
+                    ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
+                    ->where('type', 'before')
+                    ->get();
 
-            if ($cleaningBeforeImages->count() > 0) {
-                $beforeImages = $cleaningBeforeImages->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'image' => asset('storage/' . $image->image),
-                        // 'created_at' => $image->created_at,
-                        // 'source' => 'cleaning_before'
-                    ];
-                });
+                if ($cleaningBeforeImages->count() > 0) {
+                    $images = $cleaningBeforeImages->map(function ($image) {
+                        return [
+                            'id' => $image->id,
+                            'image' => asset('storage/' . $image->image),
+                        ];
+                    });
+                }
+
+                $cleaningBeforeVideos = DB::table($cleaningType . '_cleaning_videos')
+                    ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
+                    ->where('type', 'before')
+                    ->get();
+
+                if ($cleaningBeforeVideos->count() > 0) {
+                    $videos = $cleaningBeforeVideos->map(function ($video) {
+                        return [
+                            'id' => $video->id,
+                            'video' => asset('storage/' . $video->video),
+                        ];
+                    });
+                }
             }
-
-            $cleaningBeforeVideos = DB::table($cleaningType . '_cleaning_videos')
-                ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
-                ->where('type', 'before')
-                ->get();
-
-            if ($cleaningBeforeVideos->count() > 0) {
-                $beforeVideos = $cleaningBeforeVideos->map(function ($video) {
-                    return [
-                        'id' => $video->id,
-                        'video' => asset('storage/' . $video->video),
-                        //  'created_at' => $video->created_at,
-                        // 'source' => 'cleaning_before'
-                    ];
-                });
-            }
-
+        } else {
             // جلب الصور والفيديوهات بعد النظافة
-            $afterImages = DB::table($cleaningType . '_cleaning_images')
-                ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
-                ->where('type', 'after')
-                ->get()
-                ->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'image' => asset('storage/' . $image->image),
-                        // 'created_at' => $image->created_at,
-                        // 'source' => 'cleaning_after'
-                    ];
-                });
+            if ($cleaningRecord) {
+                $images = DB::table($cleaningType . '_cleaning_images')
+                    ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
+                    ->where('type', 'after')
+                    ->get()
+                    ->map(function ($image) {
+                        return [
+                            'id' => $image->id,
+                            'image' => asset('storage/' . $image->image),
+                        ];
+                    });
 
-            $afterVideos = DB::table($cleaningType . '_cleaning_videos')
-                ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
-                ->where('type', 'after')
-                ->get()
-                ->map(function ($video) {
-                    return [
-                        'id' => $video->id,
-                        'video' => asset('storage/' . $video->video),
-                        // 'created_at' => $video->created_at,
-                        // 'source' => 'cleaning_after'
-                    ];
-                });
+                $videos = DB::table($cleaningType . '_cleaning_videos')
+                    ->where($cleaningType . '_cleaning_id', $cleaningRecord->id)
+                    ->where('type', 'after')
+                    ->get()
+                    ->map(function ($video) {
+                        return [
+                            'id' => $video->id,
+                            'video' => asset('storage/' . $video->video),
+                        ];
+                    });
+            }
         }
 
-        // جلب سجل المخزون المستخدم في النظافة
+        // جلب سجل المخزون المستخدم في النظافة (فقط في حالة after)
         $inventoryRecords = collect();
         $totalCost = 0;
 
-        if ($cleaningRecord) {
+        if ($cleaningRecord && $mediaType === 'after') {
             $inventoryTable = $cleaningType . '_cleaning_inventory';
             $inventoryRecords = DB::table($inventoryTable)
                 ->join('inventory', $inventoryTable . '.inventory_id', '=', 'inventory.id')
@@ -315,7 +311,7 @@ class ChaletController extends Controller
                     $inventoryTable . '.quantity as quantity_used',
                     DB::raw('(inventory.price * ' . $inventoryTable . '.quantity) as total_cost')
                 ])
-                ->get() 
+                ->get()
                 ->map(function ($item) use (&$totalCost) {
                     $item->image = asset('storage/' . $item->image);
                     $item->total_cost = (float) $item->total_cost;
@@ -346,21 +342,20 @@ class ChaletController extends Controller
                 'record_id' => $cleaningRecord ? $cleaningRecord->id : null,
             ],
             'media' => [
-                'before_cleaning' => [
-                    'images' => $beforeImages,
-                    'videos' => $beforeVideos,
-                ],
-                'after_cleaning' => [
-                    'images' => $afterImages,
-                    'videos' => $afterVideos,
-                ],
+                'type' => $mediaType === 'before' ? 'قبل النظافة' : 'بعد النظافة',
+                'images' => $images,
+                'videos' => $videos,
             ],
-            'inventory_used' => [
+        ];
+
+        // إضافة المخزون فقط في حالة after
+        if ($mediaType === 'after') {
+            $response['inventory_used'] = [
                 'records' => $inventoryRecords,
                 'total_cost' => $totalCost,
                 'items_count' => $inventoryRecords->count(),
-            ],
-        ];
+            ];
+        }
 
         return $this->apiResponse($response, 'تم جلب معلومات الشاليه بنجاح');
     }
