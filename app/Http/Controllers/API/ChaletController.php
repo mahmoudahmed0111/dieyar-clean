@@ -315,7 +315,7 @@ class ChaletController extends Controller
                     $inventoryTable . '.quantity as quantity_used',
                     DB::raw('(inventory.price * ' . $inventoryTable . '.quantity) as total_cost')
                 ])
-                ->get()
+                ->get() 
                 ->map(function ($item) use (&$totalCost) {
                     $item->image = asset('storage/' . $item->image);
                     $item->total_cost = (float) $item->total_cost;

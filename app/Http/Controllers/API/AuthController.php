@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -114,6 +115,7 @@ class AuthController extends Controller
             'email' => 'sometimes|email|unique:cleaners,email,' . $cleaner->id,
             'phone' => 'sometimes|string|max:20',
             'address' => 'sometimes|string|max:255',
+            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif',
         ], [
             'name.string' => 'الاسم يجب أن يكون نص',
             'email.email' => 'البريد الإلكتروني غير صحيح',
@@ -121,15 +123,46 @@ class AuthController extends Controller
             'phone.string' => 'رقم الهاتف يجب أن يكون نص',
             'phone.max' => 'رقم الهاتف يجب أن يكون أقل من 20 حرف',
             'address.string' => 'العنوان يجب أن يكون نص',
+            'image.image' => 'الملف يجب أن يكون صورة',
+            'image.mimes' => 'نوع الصورة يجب أن يكون jpeg, png, jpg, gif',
+            'image.max' => 'حجم الصورة يجب أن يكون أقل من 2 ميجابايت',
         ]);
 
         if ($validator->fails()) {
             return $this->apiResponse(null, $validator->errors()->first(), 422);
         }
 
-        $cleaner->update($request->only(['name', 'email', 'phone', 'address']));
+        $updateData = $request->only(['name', 'email', 'phone', 'address']);
 
-        return $this->apiResponse(null, 'تم تحديث البيانات بنجاح');
+        // معالجة رفع الصورة
+        if ($request->hasFile('image')) {
+            // حذف الصورة القديمة إذا كانت موجودة
+            if ($cleaner->image && Storage::disk('public')->exists($cleaner->image)) {
+                Storage::disk('public')->delete($cleaner->image);
+            }
+
+            // حفظ الصورة الجديدة
+            $imagePath = $request->file('image')->store('cleaners', 'public');
+            $updateData['image'] = $imagePath;
+        }
+
+        $cleaner->update($updateData);
+
+        // إعادة تحميل البيانات المحدثة
+        $cleaner->refresh();
+
+        // تنسيق البيانات للرد
+        $cleanerData = [
+            'id' => $cleaner->id,
+            'name' => $cleaner->name,
+            'email' => $cleaner->email,
+            'phone' => $cleaner->phone,
+            'address' => $cleaner->address,
+            'image' => $cleaner->image ? asset('storage/' . $cleaner->image) : null,
+
+        ];
+
+        return $this->apiResponse($cleanerData, 'تم تحديث البيانات بنجاح');
     }
 
     /**
