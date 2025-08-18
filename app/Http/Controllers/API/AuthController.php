@@ -125,7 +125,6 @@ class AuthController extends Controller
             'address.string' => 'العنوان يجب أن يكون نص',
             'image.image' => 'الملف يجب أن يكون صورة',
             'image.mimes' => 'نوع الصورة يجب أن يكون jpeg, png, jpg, gif',
-            'image.max' => 'حجم الصورة يجب أن يكون أقل من 2 ميجابايت',
         ]);
 
         if ($validator->fails()) {
