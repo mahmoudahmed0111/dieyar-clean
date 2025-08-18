@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -109,59 +110,101 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $cleaner = $request->user();
+        $updateData = [];
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'sometimes|string|max:255',
-            'email' => 'sometimes|email|unique:cleaners,email,' . $cleaner->id,
-            'phone' => 'sometimes|string|max:20',
-            'address' => 'sometimes|string|max:255',
-            'image' => 'sometimes|image|mimes:jpeg,png,jpg,gif',
-        ], [
-            'name.string' => 'الاسم يجب أن يكون نص',
-            'email.email' => 'البريد الإلكتروني غير صحيح',
-            'email.unique' => 'البريد الإلكتروني مستخدم بالفعل',
-            'phone.string' => 'رقم الهاتف يجب أن يكون نص',
-            'phone.max' => 'رقم الهاتف يجب أن يكون أقل من 20 حرف',
-            'address.string' => 'العنوان يجب أن يكون نص',
-            'image.image' => 'الملف يجب أن يكون صورة',
-            'image.mimes' => 'نوع الصورة يجب أن يكون jpeg, png, jpg, gif',
-        ]);
+        // التحقق من الاسم
+        if ($request->has('name')) {
+            $validator = validator(['name' => $request->name], [
+                'name' => 'required|string|max:255|min:2',
+            ]);
 
-        if ($validator->fails()) {
-            return $this->apiResponse(null, $validator->errors()->first(), 422);
-        }
-
-        $updateData = $request->only(['name', 'email', 'phone', 'address']);
-
-        // معالجة رفع الصورة
-        if ($request->hasFile('image')) {
-            // حذف الصورة القديمة إذا كانت موجودة
-            if ($cleaner->image && Storage::disk('public')->exists($cleaner->image)) {
-                Storage::disk('public')->delete($cleaner->image);
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 403);
             }
 
-            // حفظ الصورة الجديدة
-            $imagePath = $request->file('image')->store('cleaners', 'public');
-            $updateData['image'] = $imagePath;
+            $updateData['name'] = $request->name;
         }
 
+        // التحقق من البريد الإلكتروني
+        if ($request->has('email')) {
+            $validator = validator(['email' => $request->email], [
+                'email' => 'required|email|unique:cleaners,email,' . $cleaner->id,
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 403);
+            }
+
+            $updateData['email'] = $request->email;
+        }
+
+        // التحقق من رقم الهاتف
+        if ($request->has('phone')) {
+            $validator = validator(['phone' => $request->phone], [
+                'phone' => 'nullable|string|max:20|min:10|regex:/^[0-9+\-\s()]+$/',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 403);
+            }
+
+            $updateData['phone'] = $request->phone;
+        }
+
+        // التحقق من العنوان
+        if ($request->has('address')) {
+            $validator = validator(['address' => $request->address], [
+                'address' => 'nullable|string|max:500|min:5',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 403);
+            }
+
+            $updateData['address'] = $request->address;
+        }
+
+        // التحقق من الصورة
+        if ($request->hasFile('image')) {
+            $validator = validator(['image' => $request->file('image')], [
+                'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+            ]);
+
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 403);
+            }
+
+            // معالجة الصورة
+            if ($request->hasFile('image')) {
+                // حذف الصورة القديمة
+                if ($cleaner->image) {
+                    Storage::disk('public')->delete($cleaner->image);
+                }
+
+                $imagePath = $request->file('image')->store('cleaners', 'public');
+                $updateData['image'] = $imagePath;
+            }
+        }
+
+        // التحقق من أن هناك بيانات للتحديث
+        if (empty($updateData)) {
+            return $this->apiResponse(null, 'لم يتم إرسال أي بيانات للتحديث', 400);
+        }
+
+        // تحديث البيانات
         $cleaner->update($updateData);
 
-        // إعادة تحميل البيانات المحدثة
-        $cleaner->refresh();
-
-        // تنسيق البيانات للرد
-        $cleanerData = [
+        // إرجاع البيانات مع رابط الصورة الكامل
+        $responseData = [
             'id' => $cleaner->id,
             'name' => $cleaner->name,
             'email' => $cleaner->email,
             'phone' => $cleaner->phone,
             'address' => $cleaner->address,
             'image' => $cleaner->image ? asset('storage/' . $cleaner->image) : null,
-
         ];
 
-        return $this->apiResponse($cleanerData, 'تم تحديث البيانات بنجاح');
+        return $this->apiResponse($responseData, 'تم تحديث البيانات بنجاح', 200);
     }
 
     /**
