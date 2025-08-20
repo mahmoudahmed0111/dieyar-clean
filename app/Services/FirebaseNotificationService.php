@@ -15,9 +15,22 @@ class FirebaseNotificationService
 
     public function __construct()
     {
-        // قراءة بيانات Firebase من ملف JSON
-        $firebaseConfig = json_decode(file_get_contents(storage_path('app/firebase-service-account.json')), true);
-        $this->projectId = $firebaseConfig['project_id'];
+        // التحقق من وجود ملف Firebase قبل محاولة قراءته
+        $firebaseConfigPath = storage_path('app/firebase-service-account.json');
+
+        if (file_exists($firebaseConfigPath)) {
+            try {
+                $firebaseConfig = json_decode(file_get_contents($firebaseConfigPath), true);
+                $this->projectId = $firebaseConfig['project_id'] ?? null;
+            } catch (\Exception $e) {
+                Log::error('Error reading Firebase config file: ' . $e->getMessage());
+                $this->projectId = null;
+            }
+        } else {
+            Log::warning('Firebase service account file not found at: ' . $firebaseConfigPath);
+            $this->projectId = null;
+        }
+
         $this->serverKey = config('services.firebase.server_key');
     }
 
@@ -68,6 +81,12 @@ class FirebaseNotificationService
      */
     private function sendFCMNotification($token, $title, $body, $data = [])
     {
+        // التحقق من وجود إعدادات Firebase
+        if (!$this->serverKey) {
+            Log::warning('Firebase server key not configured. Skipping FCM notification.');
+            return null;
+        }
+
         $url = "https://fcm.googleapis.com/fcm/send";
 
         $payload = [

@@ -21,7 +21,7 @@ class InventoryController extends Controller
         if ($request->search) {
             $search = $request->search;
             $query->where('name', 'like', "%{$search}%");
-    ar    }
+        }
 
         // فلترة المنتجات منخفضة الكمية (أقل من 3)
         if ($request->low_products == 1) {
