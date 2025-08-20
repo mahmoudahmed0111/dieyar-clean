@@ -21,6 +21,7 @@ class Cleaner extends Authenticatable
         'hire_date',
         'status',
         'image',
+        'fcm_token',
     ];
 
     protected $hidden = [
@@ -32,4 +33,10 @@ class Cleaner extends Authenticatable
         'hire_date' => 'date',
         'password' => 'hashed',
     ];
+
+    // العلاقات
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
 }

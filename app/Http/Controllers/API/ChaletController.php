@@ -24,11 +24,12 @@ class ChaletController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('floor', 'like', "%{$search}%")
-                  ->orWhere('building', 'like', "%{$search}%")
-                  ->orWhere('location', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('pass_code', 'like', "%{$search}%")
+                    ->orWhere('floor', 'like', "%{$search}%")
+                    ->orWhere('building', 'like', "%{$search}%")
+                    ->orWhere('location', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
             });
         }
 
@@ -60,6 +61,7 @@ class ChaletController extends Controller
             return [
                 'id' => $chalet->id,
                 'name' => $chalet->name,
+                'pass_code' => $chalet->pass_code,
                 'code' => $chalet->code,
                 'floor' => $chalet->floor ?? null,
                 'building' => $chalet->building ?? null,

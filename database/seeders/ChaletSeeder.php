@@ -13,6 +13,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'شاليه الشاطئ الذهبي',
                 'code' => 'CH001',
+                'pass_code' => '123456',
                 'floor' => 'الأرضي',
                 'building' => 'مبنى أ',
                 'location' => 'شاطئ البحر الأحمر - الغردقة',
@@ -27,6 +28,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'فيلا النخيل',
                 'code' => 'CH002',
+                'pass_code' => '123456',
                 'floor' => 'مستقل',
                 'building' => 'فيلا منفصلة',
                 'location' => 'عين السخنة - الساحل الشمالي',
@@ -41,6 +43,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'استوديو المرسى',
                 'code' => 'CH003',
+                'pass_code' => '123456',
                 'floor' => 'الطابق الثالث',
                 'building' => 'مبنى ب',
                 'location' => 'المرسى - الإسكندرية',
@@ -55,6 +58,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'شاليه المرجان',
                 'code' => 'CH004',
+                'pass_code' => '123456',
                 'floor' => 'الطابق الثاني',
                 'building' => 'مبنى ج',
                 'location' => 'شرم الشيخ - جنوب سيناء',
@@ -69,6 +73,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'فيلا الجبل الأخضر',
                 'code' => 'CH005',
+                'pass_code' => '123456',
                 'floor' => 'مستقل',
                 'building' => 'فيلا منفصلة',
                 'location' => 'دهب - جنوب سيناء',
@@ -83,6 +88,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'استوديو الكورنيش',
                 'code' => 'CH006',
+                'pass_code' => '123456',
                 'floor' => 'الطابق الأول',
                 'building' => 'مبنى د',
                 'location' => 'كورنيش الإسكندرية',
@@ -97,6 +103,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'شاليه الواحة',
                 'code' => 'CH007',
+                'pass_code' => '123456',
                 'floor' => 'الأرضي',
                 'building' => 'مبنى ه',
                 'location' => 'سيوة - مطروح',
@@ -111,6 +118,7 @@ class ChaletSeeder extends Seeder
             [
                 'name' => 'فيلا الصحراء الذهبية',
                 'code' => 'CH008',
+                'pass_code' => '123456',
                 'floor' => 'مستقل',
                 'building' => 'فيلا منفصلة',
                 'location' => 'البحر الأحمر - مرسى علم',

@@ -11,6 +11,7 @@ use App\Http\Controllers\API\MaintenanceController;
 use App\Http\Controllers\API\PestControlController;
 use App\Http\Controllers\API\DeepCleaningController;
 use App\Http\Controllers\API\RegularCleaningController;
+use App\Http\Controllers\API\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -110,6 +111,19 @@ Route::middleware('auth:sanctum')->group(function () {
         // Settings routes
         Route::prefix('settings')->group(function () {
             Route::get('/', [SettingController::class, 'index']);
+        });
+
+        // Notifications routes
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/stats', [NotificationController::class, 'stats']);
+            Route::get('/{notification}', [NotificationController::class, 'show']);
+            Route::put('/{notification}/read', [NotificationController::class, 'markAsRead']);
+            Route::put('/read-all', [NotificationController::class, 'markAllAsRead']);
+            Route::delete('/{notification}', [NotificationController::class, 'destroy']);
+            Route::delete('/', [NotificationController::class, 'destroyAll']);
+            Route::post('/fcm-token', [NotificationController::class, 'updateFcmToken']);
+            Route::post('/test', [NotificationController::class, 'sendTestNotification']);
         });
 
 });

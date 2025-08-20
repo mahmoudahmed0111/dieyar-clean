@@ -27,6 +27,7 @@ class ChaletController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:chalets,code',
+            'pass_code' => 'required|string|max:50',
             'floor' => 'nullable|string|max:100',
             'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
@@ -71,6 +72,7 @@ class ChaletController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:chalets,code,' . $chalet->id,
+            'pass_code' => 'required|string|max:50',
             'floor' => 'nullable|string|max:100',
             'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',

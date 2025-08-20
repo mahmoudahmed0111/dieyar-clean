@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('code')->unique();
+            $table->string('pass_code');
             $table->string('floor')->nullable();
             $table->string('building')->nullable();
             $table->string('location')->nullable();

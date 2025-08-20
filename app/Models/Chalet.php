@@ -11,6 +11,7 @@ class Chalet extends Model
     protected $fillable = [
         'name',
         'code',
+        'pass_code',
         'floor',
         'building',
         'location',
@@ -30,4 +31,6 @@ class Chalet extends Model
     {
         return $this->hasMany(ChaletVideo::class);
     }
+
+    
 }
