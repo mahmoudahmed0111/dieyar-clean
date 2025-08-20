@@ -105,6 +105,7 @@ class ChaletController extends Controller
         $formattedChalet = [
             'id' => $chalet->id,
             'name' => $chalet->name,
+            'pass_code' => $chalet->pass_code,
             'code' => $chalet->code,
             'floor' => $chalet->floor ?? null,
             'building' => $chalet->building ?? null,
