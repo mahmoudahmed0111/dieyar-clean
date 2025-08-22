@@ -10,7 +10,16 @@ use App\Models\Inventory;
 class RegularCleaning extends Model
 {
     protected $fillable = [
-        'cleaner_id', 'chalet_id', 'date', 'price', 'notes'
+        'cleaner_id',
+        'chalet_id',
+        'date',
+        'cleaning_cost',
+        'status'
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'cleaning_cost' => 'decimal:2',
     ];
 
     public function images()

@@ -10,7 +10,17 @@ use App\Models\Inventory;
 class DeepCleaning extends Model
 {
     protected $fillable = [
-        'cleaner_id', 'chalet_id', 'date', 'price', 'notes'
+        'cleaner_id',
+        'chalet_id',
+        'date',
+        'cleaning_cost',
+        'cleaning_type',
+        'status'
+    ];
+
+    protected $casts = [
+        'date' => 'date',
+        'cleaning_cost' => 'decimal:2',
     ];
 
     public function images()

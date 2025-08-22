@@ -85,6 +85,11 @@ Route::middleware('setlocale')->group(function () {
         Route::prefix('dashboard')->name('dashboard.')->middleware(['auth'])->group(function () {
             Route::resource('settings', SettingController::class);
         });
+
+        // صفحة مثال رفع النظافة
+        Route::get('/cleaning-upload-example', function () {
+            return view('cleaning-upload-example');
+        })->name('cleaning.upload.example');
     });
 
 });

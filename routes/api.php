@@ -12,6 +12,7 @@ use App\Http\Controllers\API\PestControlController;
 use App\Http\Controllers\API\DeepCleaningController;
 use App\Http\Controllers\API\RegularCleaningController;
 use App\Http\Controllers\API\NotificationController;
+use App\Http\Controllers\API\CleaningController;
 
 /*
 |--------------------------------------------------------------------------
@@ -124,5 +125,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/', [NotificationController::class, 'destroyAll']);
         Route::post('/fcm-token', [NotificationController::class, 'updateFcmToken']);
         Route::post('/test', [NotificationController::class, 'sendTestNotification']);
+    });
+
+    // Cleaning routes - دالة رفع النظافة الشاملة
+    Route::prefix('cleaning')->group(function () {
+        Route::post('/upload', [CleaningController::class, 'uploadCleaning']);
+        Route::get('/history', [CleaningController::class, 'getCleaningHistory']);
+        Route::get('/details/{id}', [CleaningController::class, 'getCleaningDetails']);
     });
 });

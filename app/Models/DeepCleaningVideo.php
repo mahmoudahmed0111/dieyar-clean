@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeepCleaningVideo extends Model
 {
-    protected $fillable = ['deep_cleaning_id', 'type', 'video'];
+    protected $fillable = [
+        'deep_cleaning_id',
+        'video',
+        'type'
+    ];
 
     public function deepCleaning()
     {

@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class RegularCleaningImage extends Model
 {
-    protected $fillable = ['regular_cleaning_id', 'type', 'image'];
+    protected $fillable = [
+        'regular_cleaning_id',
+        'image',
+        'type'
+    ];
 
     public function regularCleaning()
     {

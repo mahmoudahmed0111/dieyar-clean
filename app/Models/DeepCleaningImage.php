@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class DeepCleaningImage extends Model
 {
-    protected $fillable = ['deep_cleaning_id', 'type', 'image'];
+    protected $fillable = [
+        'deep_cleaning_id',
+        'image',
+        'type'
+    ];
 
     public function deepCleaning()
     {
