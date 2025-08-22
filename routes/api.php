@@ -9,6 +9,7 @@ use App\Http\Controllers\API\SettingController;
 use App\Http\Controllers\API\InventoryController;
 use App\Http\Controllers\API\MaintenanceController;
 use App\Http\Controllers\API\PestControlController;
+use App\Http\Controllers\API\ServiceController;
 use App\Http\Controllers\API\DeepCleaningController;
 use App\Http\Controllers\API\RegularCleaningController;
 use App\Http\Controllers\API\NotificationController;
@@ -73,24 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{deepCleaning}/videos', [DeepCleaningController::class, 'uploadVideos']);
     });
 
-    // Maintenance routes
-    Route::prefix('maintenance')->group(function () {
-        Route::get('/', [MaintenanceController::class, 'index']);
-        Route::post('/', [MaintenanceController::class, 'store']);
-        Route::get('/{maintenance}', [MaintenanceController::class, 'show']);
-        Route::put('/{maintenance}', [MaintenanceController::class, 'update']);
-        Route::post('/{maintenance}/images', [MaintenanceController::class, 'uploadImages']);
-        Route::post('/{maintenance}/videos', [MaintenanceController::class, 'uploadVideos']);
-    });
-
-    // Pest Control routes
-    Route::prefix('pest-controls')->group(function () {
-        Route::get('/', [PestControlController::class, 'index']);
-        Route::post('/', [PestControlController::class, 'store']);
-        Route::get('/{pestControl}', [PestControlController::class, 'show']);
-        Route::put('/{pestControl}', [PestControlController::class, 'update']);
-        Route::post('/{pestControl}/images', [PestControlController::class, 'uploadImages']);
-        Route::post('/{pestControl}/videos', [PestControlController::class, 'uploadVideos']);
+    // Service routes - تقارير الخدمات (صيانة ومكافحة)
+    Route::prefix('services')->group(function () {
+        Route::post('/upload', [ServiceController::class, 'uploadService']);
     });
 
     // Damages routes - تقارير الأضرار
