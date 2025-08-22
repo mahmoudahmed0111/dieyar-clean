@@ -13,6 +13,7 @@ return new class extends Migration
             $table->foreignId('cleaner_id')->nullable()->constrained('cleaners')->onDelete('set null');
             $table->foreignId('chalet_id')->nullable()->constrained('chalets')->onDelete('set null');
             $table->date('date');
+            $table->string('status')->default('pending');
             $table->string('price')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
