@@ -3,138 +3,169 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\Chalet;
+use App\Models\Cleaner;
 use App\Models\Damage;
 use App\Models\DamageImage;
 use App\Models\DamageVideo;
 use App\Http\Controllers\API\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class DamageController extends Controller
 {
     use ResponseTrait;
-    /**
-     * عرض قائمة الأضرار
-     */
-    public function index(Request $request)
-    {
-        $damages = Damage::with(['chalet', 'cleaner', 'images', 'videos'])
-            ->when($request->cleaner_id, function ($query, $cleanerId) {
-                $query->where('cleaner_id', $cleanerId);
-            })
-            ->when($request->chalet_id, function ($query, $chaletId) {
-                $query->where('chalet_id', $chaletId);
-            })
-            ->when($request->status, function ($query, $status) {
-                $query->where('status', $status);
-            })
-            ->when($request->damage_type, function ($query, $type) {
-                $query->where('damage_type', $type);
-            })
-            ->orderBy('created_at', 'desc')
-            ->paginate($request->per_page ?? 15);
-        return $this->apiResponse($damages, 'تم جلب الأضرار بنجاح', 200);
-    }
 
     /**
-     * إنشاء ضرر جديد
+     * رفع تقرير ضرر جديد
      */
-    public function store(Request $request)
+    public function uploadDamage(Request $request)
     {
-        $request->validate([
-            'chalet_id' => 'required|exists:chalets,id',
-            'cleaner_id' => 'required|exists:cleaners,id',
-            'damage_date' => 'required|date',
-            'damage_type' => 'required|string|in:structural,electrical,plumbing,furniture,other',
-            'description' => 'required|string',
-            'severity' => 'required|string|in:low,medium,high,critical',
-            'estimated_cost' => 'nullable|numeric|min:0',
-            'status' => 'sometimes|string|in:reported,assessed,repairing,repaired',
-        ]);
-
-        $damage = Damage::create($request->all());
-
-        return $this->apiResponse($damage->load(['chalet', 'cleaner']), 'تم إنشاء تقرير الضرر بنجاح', 201);
-    }
-
-    /**
-     * عرض بيانات ضرر محدد
-     */
-    public function show(Damage $damage)
-    {
-        $damage->load(['chalet', 'cleaner', 'images', 'videos']);
-
-        return $this->apiResponse($damage, 'تم جلب بيانات الضرر بنجاح');
-    }
-
-    /**
-     * تحديث بيانات ضرر
-     */
-    public function update(Request $request, Damage $damage)
-    {
-        $request->validate([
-            'damage_date' => 'sometimes|date',
-            'damage_type' => 'sometimes|string|in:structural,electrical,plumbing,furniture,other',
-            'description' => 'sometimes|string',
-            'severity' => 'sometimes|string|in:low,medium,high,critical',
-            'estimated_cost' => 'nullable|numeric|min:0',
-            'status' => 'sometimes|string|in:reported,assessed,repairing,repaired',
-        ]);
-
-        $damage->update($request->all());
-
-        return $this->apiResponse($damage->fresh(['chalet', 'cleaner']), 'تم تحديث تقرير الضرر بنجاح');
-    }
-
-    /**
-     * رفع صور للضرر
-     */
-    public function uploadImages(Request $request, Damage $damage)
-    {
-        $request->validate([
-            'images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
-
-        $uploadedImages = [];
-
-        foreach ($request->file('images') as $image) {
-            $path = $image->store('damages/images', 'public');
-
-            $uploadedImage = DamageImage::create([
-                'damage_id' => $damage->id,
-                'image_path' => $path,
-                'description' => $request->input('description', '')
+        try {
+            // التحقق من البيانات الأساسية
+            $validator = Validator::make($request->all(), [
+                'chalet_id' => 'required|exists:chalets,id',
+                'description' => 'required|string|max:1000',
+                'price' => 'required|numeric|min:0',
+                'images' => 'nullable|array',
+                'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:10240', // 10MB max
+                'videos' => 'nullable|array',
+                'videos.*' => 'nullable|mimes:mp4,avi,mov,wmv,webm|max:102400', // 100MB max
+            ], [
+                'chalet_id.required' => 'معرف الشاليه مطلوب',
+                'chalet_id.exists' => 'الشاليه غير موجود',
+                'description.required' => 'وصف الضرر مطلوب',
+                'description.string' => 'وصف الضرر يجب أن يكون نص',
+                'description.max' => 'وصف الضرر يجب أن يكون أقل من 1000 حرف',
+                'price.required' => 'سعر الضرر مطلوب',
+                'price.numeric' => 'سعر الضرر يجب أن يكون رقم',
+                'price.min' => 'سعر الضرر يجب أن يكون أكبر من أو يساوي صفر',
+                'images.array' => 'الصور يجب أن تكون مصفوفة',
+                'images.*.image' => 'الملف يجب أن يكون صورة',
+                'images.*.mimes' => 'نوع الصورة غير مدعوم',
+                'images.*.max' => 'حجم الصورة يجب أن يكون أقل من 10 ميجابايت',
+                'videos.array' => 'الفيديوهات يجب أن تكون مصفوفة',
+                'videos.*.mimes' => 'نوع الفيديو غير مدعوم',
+                'videos.*.max' => 'حجم الفيديو يجب أن يكون أقل من 100 ميجابايت',
             ]);
 
-            $uploadedImages[] = $uploadedImage;
-        }
+            if ($validator->fails()) {
+                return $this->apiResponse(null, $validator->errors()->first(), 422);
+            }
 
-        return $this->apiResponse($uploadedImages, 'تم رفع الصور بنجاح');
+            $cleaner = $request->user();
+            $chaletId = $request->chalet_id;
+
+            // إنشاء سجل الضرر
+            $damageData = [
+                'chalet_id' => $chaletId,
+                'cleaner_id' => $cleaner->id,
+                'description' => $request->description,
+                'price' => $request->price,
+                'reported_at' => now(),
+                'status' => 'pending',
+            ];
+
+            $damage = Damage::create($damageData);
+
+            // رفع الصور
+            $uploadedImages = [];
+            if ($request->hasFile('images')) {
+                Log::info('Found images in request: ' . count($request->file('images')));
+                foreach ($request->file('images') as $index => $image) {
+                    try {
+                        if ($image && $image->isValid()) {
+                            $path = $image->store('damages/images', 'public');
+                            Log::info('Image uploaded successfully: ' . $path);
+
+                            $uploadedImage = DamageImage::create([
+                                'damage_id' => $damage->id,
+                                'image' => $path,
+                            ]);
+
+                            $uploadedImages[] = [
+                                'id' => $uploadedImage->id,
+                                'image' => asset('storage/' . $path),
+                            ];
+                        } else {
+                            Log::warning('Invalid image file at index: ' . $index);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading image: ' . $e->getMessage());
+                    }
+                }
+            } else {
+                Log::info('No images found in request');
+            }
+
+            // رفع الفيديوهات
+            $uploadedVideos = [];
+            if ($request->hasFile('videos')) {
+                Log::info('Found videos in request: ' . count($request->file('videos')));
+                foreach ($request->file('videos') as $index => $video) {
+                    try {
+                        if ($video && $video->isValid()) {
+                            $path = $video->store('damages/videos', 'public');
+                            Log::info('Video uploaded successfully: ' . $path);
+
+                            $uploadedVideo = DamageVideo::create([
+                                'damage_id' => $damage->id,
+                                'video' => $path,
+                            ]);
+
+                            $uploadedVideos[] = [
+                                'id' => $uploadedVideo->id,
+                                'video' => asset('storage/' . $path),
+                            ];
+                        } else {
+                            Log::warning('Invalid video file at index: ' . $index);
+                        }
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading video: ' . $e->getMessage());
+                    }
+                }
+            } else {
+                Log::info('No videos found in request');
+            }
+
+            // معلومات الشاليه
+            $chalet = Chalet::find($chaletId);
+
+            // تجميع البيانات للرد
+            $response = [
+                'damage_record' => [
+                    'id' => $damage->id,
+                    'chalet_id' => $damage->chalet_id,
+                    'cleaner_id' => $damage->cleaner_id,
+                    'description' => $damage->description,
+                    'price' => $damage->price,
+                    'reported_at' => $damage->reported_at,
+                    'status' => $damage->status,
+                    'created_at' => $damage->created_at,
+                ],
+                'chalet' => $chalet ? [
+                    'id' => $chalet->id,
+                    'name' => $chalet->name,
+                    'code' => $chalet->code,
+                    'pass_code' => $chalet->pass_code,
+                ] : null,
+                'uploaded_media' => [
+                    'images' => $uploadedImages,
+                    'videos' => $uploadedVideos,
+                    'images_count' => count($uploadedImages),
+                    'videos_count' => count($uploadedVideos),
+                ],
+            ];
+
+            return $this->apiResponse($response, 'تم رفع تقرير الضرر بنجاح', 201);
+
+        } catch (\Exception $e) {
+            Log::error('Error in reportDamage: ' . $e->getMessage());
+            return $this->apiResponse(null, 'حدث خطأ أثناء رفع تقرير الضرر: ' . $e->getMessage(), 500);
+        }
     }
 
-    /**
-     * رفع فيديوهات للضرر
-     */
-    public function uploadVideos(Request $request, Damage $damage)
-    {
-        $request->validate([
-            'videos.*' => 'required|mimes:mp4,avi,mov,wmv|max:10240'
-        ]);
-
-        $uploadedVideos = [];
-
-        foreach ($request->file('videos') as $video) {
-            $path = $video->store('damages/videos', 'public');
-
-            $uploadedVideo = DamageVideo::create([
-                'damage_id' => $damage->id,
-                'video_path' => $path,
-                'description' => $request->input('description', '')
-            ]);
-
-            $uploadedVideos[] = $uploadedVideo;
-        }
-
-        return $this->apiResponse($uploadedVideos, 'تم رفع الفيديوهات بنجاح');
-    }
 }

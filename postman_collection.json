@@ -267,6 +267,173 @@
 					]
 				}
 			}
+		},
+		{
+			"name": "جلب تفاصيل الضرر",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/api/damages/details/1",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"damages",
+						"details",
+						"1"
+					]
+				}
+			}
+		},
+		{
+			"name": "رفع تقرير ضرر",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "chalet_id",
+							"value": "1",
+							"type": "text"
+						},
+						{
+							"key": "description",
+							"value": "كسر في النافذة الرئيسية",
+							"type": "text"
+						},
+						{
+							"key": "price",
+							"value": "150.00",
+							"type": "text"
+						},
+						{
+							"key": "images[]",
+							"type": "file",
+							"src": []
+						},
+						{
+							"key": "videos[]",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/damages/report",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"damages",
+						"report"
+					]
+				}
+			}
+		},
+		{
+			"name": "جلب سجل الأضرار",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{baseURL}}/api/damages/history?status=pending&per_page=10",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"damages",
+						"history"
+					],
+					"query": [
+						{
+							"key": "status",
+							"value": "pending"
+						},
+						{
+							"key": "per_page",
+							"value": "10"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "تحديث حالة الضرر",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{token}}",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\": \"fixed\"\n}"
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/damages/1/status",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"damages",
+						"1",
+						"status"
+					]
+				}
+			}
 		}
 	],
 	"variable": [

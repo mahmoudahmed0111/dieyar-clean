@@ -93,14 +93,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/{pestControl}/videos', [PestControlController::class, 'uploadVideos']);
     });
 
-    // Damages routes
+    // Damages routes - تقارير الأضرار
     Route::prefix('damages')->group(function () {
-        Route::get('/', [DamageController::class, 'index']);
-        Route::post('/', [DamageController::class, 'store']);
-        Route::get('/{damage}', [DamageController::class, 'show']);
-        Route::put('/{damage}', [DamageController::class, 'update']);
-        Route::post('/{damage}/images', [DamageController::class, 'uploadImages']);
-        Route::post('/{damage}/videos', [DamageController::class, 'uploadVideos']);
+        Route::post('/upload', [DamageController::class, 'uploadDamage']);
+
     });
 
     // Inventory routes
