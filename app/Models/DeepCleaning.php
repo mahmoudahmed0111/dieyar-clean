@@ -13,14 +13,14 @@ class DeepCleaning extends Model
         'cleaner_id',
         'chalet_id',
         'date',
-        'cleaning_cost',
+        'price',
         'cleaning_type',
         'status'
     ];
 
     protected $casts = [
         'date' => 'date',
-        'cleaning_cost' => 'decimal:2',
+        'price' => 'decimal:2',
     ];
 
     public function images()

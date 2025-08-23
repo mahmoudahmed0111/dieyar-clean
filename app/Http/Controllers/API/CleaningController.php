@@ -116,6 +116,8 @@ class CleaningController extends Controller
 
                 if ($cleaningType === 'deep') {
                     $cleaningData['cleaning_type'] = 'deep_cleaning';
+                } else {
+                    $cleaningData['cleaning_type'] = 'regular_cleaning';
                 }
 
                 $cleaningRecord = $cleaningModel::create($cleaningData);
@@ -198,7 +200,7 @@ class CleaningController extends Controller
 
             // تحديث سعر النظافة (فقط في حالة after)
             if ($cleaningTime === 'after' && $request->cleaning_cost) {
-                $cleaningRecord->update(['cleaning_cost' => $request->cleaning_cost]);
+                $cleaningRecord->update(['price' => $request->cleaning_cost]);
             }
 
             // تجميع البيانات للرد
@@ -208,7 +210,7 @@ class CleaningController extends Controller
                     'chalet_id' => $cleaningRecord->chalet_id,
                     'cleaner_id' => $cleaningRecord->cleaner_id,
                     'date' => $cleaningRecord->date,
-                    'cleaning_cost' => $cleaningRecord->cleaning_cost ?? 0,
+                    'cleaning_cost' => $cleaningRecord->price ?? 0,
                     'status' => $cleaningRecord->status,
                 ],
                 'uploaded_media' => [
@@ -268,7 +270,7 @@ class CleaningController extends Controller
                     'chalet_id',
                     'cleaner_id',
                     'date',
-                    'cleaning_cost',
+                    'price as cleaning_cost',
                     'status',
                     DB::raw("'regular' as cleaning_type")
                 ])
@@ -281,7 +283,7 @@ class CleaningController extends Controller
                         'chalet_id',
                         'cleaner_id',
                         'date',
-                        'cleaning_cost',
+                        'price as cleaning_cost',
                         'status',
                         DB::raw("'deep' as cleaning_type")
                     ])
@@ -294,7 +296,7 @@ class CleaningController extends Controller
                         'chalet_id',
                         'cleaner_id',
                         'date',
-                        'cleaning_cost',
+                        'price as cleaning_cost',
                         'status',
                         DB::raw("'regular' as cleaning_type")
                     ])
@@ -306,7 +308,7 @@ class CleaningController extends Controller
                         'chalet_id',
                         'cleaner_id',
                         'date',
-                        'cleaning_cost',
+                        'price as cleaning_cost',
                         'status',
                         DB::raw("'deep' as cleaning_type")
                     ])
@@ -455,7 +457,7 @@ class CleaningController extends Controller
                     'chalet_id' => $cleaningRecord->chalet_id,
                     'cleaner_id' => $cleaningRecord->cleaner_id,
                     'date' => $cleaningRecord->date,
-                    'cleaning_cost' => $cleaningRecord->cleaning_cost ?? 0,
+                    'cleaning_cost' => $cleaningRecord->price ?? 0,
                     'status' => $cleaningRecord->status,
                     'created_at' => $cleaningRecord->created_at,
                     'updated_at' => $cleaningRecord->updated_at,

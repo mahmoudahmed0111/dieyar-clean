@@ -13,13 +13,14 @@ class RegularCleaning extends Model
         'cleaner_id',
         'chalet_id',
         'date',
-        'cleaning_cost',
-        'status'
+        'price',
+        'status',
+        'cleaning_type'
     ];
 
     protected $casts = [
         'date' => 'date',
-        'cleaning_cost' => 'decimal:2',
+        'price' => 'decimal:2',
     ];
 
     public function images()
