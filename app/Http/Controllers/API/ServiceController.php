@@ -154,7 +154,7 @@ class ServiceController extends Controller
                 'chalet_id' => $chaletId,
                 'cleaner_id' => $cleaner->id,
                 'description' => $request->description ?? '',
-                'status' => $cleaningTime === 'after' ? 'completed' : 'in_progress',
+                'status' => $cleaningTime === 'after' ? 'done' : 'in_progress',
                 'requested_at' => now(),
             ];
 
@@ -167,7 +167,7 @@ class ServiceController extends Controller
             // تحديث السجل الموجود
             if ($cleaningTime === 'after') {
                 $maintenance->update([
-                    'status' => 'completed',
+                    'status' => 'done',
                     'completed_at' => now(),
                 ]);
             }
@@ -196,7 +196,7 @@ class ServiceController extends Controller
                 'cleaner_id' => $cleaner->id,
                 'date' => now()->toDateString(),
                 'description' => $request->description ?? '',
-                'status' => $cleaningTime === 'after' ? 'completed' : 'in_progress',
+                'status' => $cleaningTime === 'after' ? 'done' : 'pending',
             ];
 
             $pestControl = PestControl::create($pestControlData);
@@ -204,7 +204,7 @@ class ServiceController extends Controller
             // تحديث السجل الموجود
             if ($cleaningTime === 'after') {
                 $pestControl->update([
-                    'status' => 'completed',
+                    'status' => 'done',
                 ]);
             }
         }
