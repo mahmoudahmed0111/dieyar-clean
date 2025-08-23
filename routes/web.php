@@ -10,6 +10,18 @@ use App\Http\Controllers\Dashboard\SettingController;
 // تطبيق middleware للغة على جميع routes
 Route::middleware('setlocale')->group(function () {
 
+    Route::get('/link', function () {
+        $targetFolder = storage_path('app/public');
+        $linkFolder = $_SERVER['DOCUMENT_ROOT'] . '/public/storage'; // Added a slash (/)
+
+        if (!file_exists($linkFolder)) {
+            symlink($targetFolder, $linkFolder);
+            return 'Symlink created successfully.';
+        } else {
+            return 'Symlink already exists.';
+        }
+    });
+
     // Route لتغيير اللغة
     Route::get('/language/{locale}', [LanguageController::class, 'switchLanguage'])->name('language.switch');
 
@@ -91,5 +103,4 @@ Route::middleware('setlocale')->group(function () {
             return view('cleaning-upload-example');
         })->name('cleaning.upload.example');
     });
-
 });
