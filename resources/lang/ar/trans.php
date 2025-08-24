@@ -353,5 +353,7 @@ return [
         'chalet_updated_successfully' => 'تم تحديث الشاليه بنجاح',
         'chalet_deleted_successfully' => 'تم حذف الشاليه بنجاح',
         'required' => 'مطلوب',
+        'pass_code' => 'كلمة السر',
+        'enter_pass_code' => 'أدخل كلمة السر',
 
 ];

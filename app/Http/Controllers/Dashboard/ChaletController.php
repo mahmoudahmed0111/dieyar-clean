@@ -34,6 +34,7 @@ class ChaletController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:chalets,code',
+            'pass_code' => 'required|string|max:50',
             'floor' => 'nullable|string|max:100',
             'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',
@@ -49,11 +50,6 @@ class ChaletController extends Controller
         // دمج البيانات المعالجة مع البيانات المصدقة
         $validated['is_cleaned'] = $data['is_cleaned'];
         $validated['is_booked'] = $data['is_booked'];
-
-        // إنشاء pass_code تلقائياً إذا لم يتم توفيره
-        if (!isset($validated['pass_code'])) {
-            $validated['pass_code'] = 'PASS' . strtoupper(substr(md5(uniqid()), 0, 8));
-        }
 
         try {
             $chalet = DB::transaction(function () use ($request, $validated) {
@@ -104,6 +100,7 @@ class ChaletController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:chalets,code,' . $chalet->id,
+            'pass_code' => 'required|string|max:50',
             'floor' => 'nullable|string|max:100',
             'building' => 'nullable|string|max:100',
             'location' => 'nullable|string|max:255',

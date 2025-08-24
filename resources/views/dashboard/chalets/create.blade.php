@@ -35,6 +35,13 @@
                     @error('code')<span class="error-message">{{ $message }}</span>@enderror
                 </div>
                 <div class="form-group">
+                    <label class="form-label">{{ __('trans.pass_code') }} <span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="text" name="pass_code" class="form-input @error('pass_code') error @enderror" value="{{ old('pass_code') }}" required placeholder="{{ __('trans.enter_pass_code') }}">
+                    </div>
+                    @error('pass_code')<span class="error-message">{{ $message }}</span>@enderror
+                </div>
+                <div class="form-group">
                     <label class="form-label">{{ __('trans.floor') }}</label>
                     <div class="input-wrapper">
                         <input type="text" name="floor" class="form-input @error('floor') error @enderror" value="{{ old('floor') }}" placeholder="{{ __('trans.enter_floor') }}">
