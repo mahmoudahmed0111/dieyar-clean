@@ -127,6 +127,7 @@ return [
     'edit_chalet' => 'تعديل الشاليه',
     'update_chalet_information_and_media' => 'تحديث معلومات الشاليه والوسائط',
     'fill_in_the_chalet_details_below' => 'أدخل التفاصيل التالية للشاليه',
+    'add_chalet' => 'إضافة شاليه',
     'chalet_information' => 'معلومات الشاليه',
     'back_to_chalets' => 'العودة إلى الشاليهات',
     'no_chalets_found' => 'لا يوجد شاليهات',
@@ -145,6 +146,7 @@ return [
     'available' => 'متاح',
     'unavailable' => 'غير متاح',
     'enter_chalet_name' => 'أدخل اسم الشاليه',
+    'enter_chalet_code' => 'أدخل كود الشاليه',
     'enter_location' => 'أدخل الموقع',
     'enter_type' => 'أدخل النوع',
     'select_type' => 'اختر النوع',
@@ -345,5 +347,11 @@ return [
         'is_booked' => 'محجوز',
         'mark_as_cleaned' => 'تحديث منظف',
         'mark_as_booked' => 'تحديث محجوز',
+
+        // Success messages
+        'chalet_created_successfully' => 'تم إنشاء الشاليه بنجاح',
+        'chalet_updated_successfully' => 'تم تحديث الشاليه بنجاح',
+        'chalet_deleted_successfully' => 'تم حذف الشاليه بنجاح',
+        'required' => 'مطلوب',
 
 ];
