@@ -58,19 +58,19 @@ class ChaletController extends Controller
         try {
             $chalet = DB::transaction(function () use ($request, $validated) {
                 $chalet = Chalet::create($validated);
-                
+
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
         $path = $image->store('chalets/images', 'public');
                         ChaletImage::create(['chalet_id' => $chalet->id, 'image' => $path]);
                     }
                 }
-                
+
 // حفظ الفيديو المرفوع عبر Uppy
                 if ($request->filled('uppy_video')) {
                     ChaletVideo::create(['chalet_id' => $chalet->id, 'video' => $request->uppy_video]);
                 }
-                
+
                 return $chalet;
             });
 
@@ -100,7 +100,7 @@ class ChaletController extends Controller
         // معالجة الحقول boolean
         $data['is_cleaned'] = $request->has('is_cleaned') ? true : false;
         $data['is_booked'] = $request->has('is_booked') ? true : false;
-        
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:chalets,code,' . $chalet->id,
@@ -122,7 +122,7 @@ class ChaletController extends Controller
         try {
             DB::transaction(function () use ($request, $validated, $chalet) {
                 $chalet->update($validated);
-                
+
                 // إضافة صور جديدة
                 if ($request->hasFile('images')) {
                     foreach ($request->file('images') as $image) {
@@ -130,7 +130,7 @@ class ChaletController extends Controller
                         $chalet->images()->create(['image' => $path]);
                     }
                 }
-                
+
                 // إضافة فيديو جديد إذا تم رفعه
                 if ($request->filled('uppy_video')) {
                     // إذا لم يكن هناك فيديو سابق أو تم رفع فيديو جديد
