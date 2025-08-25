@@ -160,7 +160,7 @@ class DamageController extends Controller
                 ],
             ];
 
-            return $this->apiResponse($response, 'تم رفع تقرير الضرر بنجاح', 201);
+            return $this->apiResponse(null, 'تم رفع تقرير الضرر بنجاح', 201);
 
         } catch (\Exception $e) {
             Log::error('Error in reportDamage: ' . $e->getMessage());

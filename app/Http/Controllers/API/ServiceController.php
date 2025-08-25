@@ -127,7 +127,7 @@ class ServiceController extends Controller
             $serviceName = $serviceType === 'maintenance' ? 'الصيانة' : 'المكافحة';
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' ' . $serviceName . ' بنجاح';
 
-            return $this->apiResponse($response, $message, 201);
+            return $this->apiResponse(null, $message, 201);
 
         } catch (\Exception $e) {
             Log::error('Error in uploadService: ' . $e->getMessage());
