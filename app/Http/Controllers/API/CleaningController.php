@@ -36,11 +36,11 @@ class CleaningController extends Controller
                     $request->merge(['inventory_items' => $inventoryItems]);
                 } else {
                     // إذا كان JSON غير صحيح، إرجاع خطأ واضح
-                    return $this->apiResponse(null, 'تنسيق المنتجات غير صحيح. يجب أن يكون JSON صحيح مثل: [{"inventory_id":1,"quantity":2}]', 422);
+                    return $this->apiResponse(null, 'تنسيق المنتجات غير صحيح. يجب أن يكون JSON صحيح مثل: [{"inventory_id":1,"quantity":2}]', 404);
                 }
             } elseif ($request->has('inventory_items') && !is_array($request->inventory_items)) {
                 // إذا كانت inventory_items موجودة ولكن ليست مصفوفة ولا نص JSON
-                return $this->apiResponse(null, 'المنتجات يجب أن تكون مصفوفة أو JSON صحيح', 422);
+                return $this->apiResponse(null, 'المنتجات يجب أن تكون مصفوفة أو JSON صحيح', 404);
             }
 
             // التحقق من البيانات الأساسية
@@ -86,7 +86,7 @@ class CleaningController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return $this->apiResponse(null, $validator->errors()->first(), 422);
+                return $this->apiResponse(null, $validator->errors()->first(), 404);
             }
 
             $cleaner = $request->user();
@@ -236,7 +236,7 @@ class CleaningController extends Controller
 
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' النظافة بنجاح';
 
-            return $this->apiResponse($response, $message, 201);
+            return $this->apiResponse(null, $message, 201);
 
         } catch (\Exception $e) {
             Log::error('Error in uploadCleaning: ' . $e->getMessage());
@@ -261,7 +261,7 @@ class CleaningController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return $this->apiResponse(null, $validator->errors()->first(), 422);
+                return $this->apiResponse(null, $validator->errors()->first(), 404);
             }
 
             $query = DB::table('regular_cleanings')
@@ -379,7 +379,7 @@ class CleaningController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return $this->apiResponse(null, $validator->errors()->first(), 422);
+                return $this->apiResponse(null, $validator->errors()->first(), 404);
             }
 
             $cleaningType = $request->cleaning_type;
