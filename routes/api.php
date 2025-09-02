@@ -34,6 +34,8 @@ Route::prefix('chalets')->group(function () {
     Route::get('/', [ChaletController::class, 'index']);
     Route::get('/stats', [ChaletController::class, 'stats']);
     Route::get('/info', [ChaletController::class, 'chaletInfo']);
+    Route::get('/service-info', [ChaletController::class, 'serviceInfo']);
+    Route::get('/damage-info', [ChaletController::class, 'damageInfo']);
     Route::get('/{chalet}', [ChaletController::class, 'show']);
 });
 
