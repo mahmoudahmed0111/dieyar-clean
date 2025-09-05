@@ -247,38 +247,6 @@ class CleaningController extends Controller
                     'total_cost' => array_sum(array_column($inventoryItems, 'total_cost')),
                     'items_count' => count($inventoryItems),
                 ];
-                
-                // إضافة pass_code الجديد للرد
-                if (isset($chalet)) {
-                    $response['chalet_info'] = [
-                        'chalet_id' => $chalet->id,
-                        'chalet_name' => $chalet->name,
-                        'new_pass_code' => $request->pass_code,
-                    ];
-                }
-            }
-
-            // إرسال إشعار لجميع عمال النظافة الآخرين
-            try {
-                $firebaseService = new FirebaseNotificationService();
-                $chalet = Chalet::find($chaletId);
-                
-                $title = $cleaningType === 'regular' ? 'تنظيف منتظم جديد' : 'تنظيف عميق جديد';
-                $body = "قام {$cleaner->name} برفع " . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . " النظافة للشاليه: {$chalet->name}";
-                
-                $data = [
-                    'type' => $cleaningType . '_cleaning',
-                    'cleaning_id' => $cleaningRecord->id,
-                    'chalet_id' => $chaletId,
-                    'chalet_name' => $chalet->name,
-                    'cleaner_name' => $cleaner->name,
-                    'cleaning_time' => $cleaningTime,
-                    'date' => $request->date,
-                ];
-                
-                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
-            } catch (\Exception $e) {
-                Log::error('Error sending cleaning notification: ' . $e->getMessage());
             }
 
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' النظافة بنجاح';
