@@ -13,6 +13,7 @@ use App\Models\RegularCleaningVideo;
 use App\Models\DeepCleaningVideo;
 use App\Models\Inventory;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -50,6 +51,7 @@ class CleaningController extends Controller
                 'cleaning_time' => 'required|in:before,after',
                 'date' => 'required|date',
                 'cleaning_cost' => 'required_if:cleaning_time,after|numeric|min:0',
+                'pass_code' => 'required_if:cleaning_time,after|string|min:4|max:20',
                 'inventory_items' => 'required_if:cleaning_time,after|array',
                 'inventory_items.*.inventory_id' => 'required_if:cleaning_time,after|exists:inventory,id',
                 'inventory_items.*.quantity' => 'required_if:cleaning_time,after|integer|min:1',
@@ -69,6 +71,10 @@ class CleaningController extends Controller
                 'cleaning_cost.required_if' => 'سعر النظافة مطلوب في حالة after',
                 'cleaning_cost.numeric' => 'سعر النظافة يجب أن يكون رقم',
                 'cleaning_cost.min' => 'سعر النظافة يجب أن يكون أكبر من صفر',
+                'pass_code.required_if' => 'كود المرور الجديد مطلوب في حالة after',
+                'pass_code.string' => 'كود المرور يجب أن يكون نص',
+                'pass_code.min' => 'كود المرور يجب أن يكون 4 أحرف على الأقل',
+                'pass_code.max' => 'كود المرور يجب أن يكون 20 حرف على الأكثر',
                 'inventory_items.required_if' => 'المنتجات المستخدمة مطلوبة في حالة after',
                 'inventory_items.array' => 'المنتجات يجب أن تكون مصفوفة',
                 'inventory_items.*.inventory_id.required_if' => 'معرف المنتج مطلوب',
@@ -203,6 +209,15 @@ class CleaningController extends Controller
                 $cleaningRecord->update(['price' => $request->cleaning_cost]);
             }
 
+            // تحديث pass_code للشاليه (فقط في حالة after)
+            if ($cleaningTime === 'after') {
+                $chalet = Chalet::find($chaletId);
+                if ($chalet) {
+                    // استخدام pass_code المدخل من المستخدم
+                    $chalet->update(['pass_code' => $request->pass_code]);
+                }
+            }
+
             // تجميع البيانات للرد
             $response = [
                 'cleaning_record' => [
@@ -232,6 +247,38 @@ class CleaningController extends Controller
                     'total_cost' => array_sum(array_column($inventoryItems, 'total_cost')),
                     'items_count' => count($inventoryItems),
                 ];
+                
+                // إضافة pass_code الجديد للرد
+                if (isset($chalet)) {
+                    $response['chalet_info'] = [
+                        'chalet_id' => $chalet->id,
+                        'chalet_name' => $chalet->name,
+                        'new_pass_code' => $request->pass_code,
+                    ];
+                }
+            }
+
+            // إرسال إشعار لجميع عمال النظافة الآخرين
+            try {
+                $firebaseService = new FirebaseNotificationService();
+                $chalet = Chalet::find($chaletId);
+                
+                $title = $cleaningType === 'regular' ? 'تنظيف منتظم جديد' : 'تنظيف عميق جديد';
+                $body = "قام {$cleaner->name} برفع " . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . " النظافة للشاليه: {$chalet->name}";
+                
+                $data = [
+                    'type' => $cleaningType . '_cleaning',
+                    'cleaning_id' => $cleaningRecord->id,
+                    'chalet_id' => $chaletId,
+                    'chalet_name' => $chalet->name,
+                    'cleaner_name' => $cleaner->name,
+                    'cleaning_time' => $cleaningTime,
+                    'date' => $request->date,
+                ];
+                
+                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+            } catch (\Exception $e) {
+                Log::error('Error sending cleaning notification: ' . $e->getMessage());
             }
 
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' النظافة بنجاح';

@@ -9,6 +9,7 @@ use App\Models\PestControl;
 use App\Models\PestControlImage;
 use App\Models\PestControlVideo;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -179,6 +180,29 @@ class PestControlController extends Controller
                     'time' => $cleaningTime === 'before' ? 'قبل المكافحة' : 'بعد المكافحة',
                 ]
             ];
+
+            // إرسال إشعار لجميع عمال النظافة الآخرين
+            try {
+                $firebaseService = new FirebaseNotificationService();
+                $cleaner = $request->user();
+                
+                $title = 'تقرير مكافحة جديد';
+                $body = "قام {$cleaner->name} برفع " . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . " المكافحة للشاليه: {$chalet->name}";
+                
+                $data = [
+                    'type' => 'pest_control',
+                    'pest_control_id' => $pestControl->id,
+                    'chalet_id' => $chaletId,
+                    'chalet_name' => $chalet->name,
+                    'cleaner_name' => $cleaner->name,
+                    'cleaning_time' => $cleaningTime,
+                    'description' => $pestControl->description,
+                ];
+                
+                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+            } catch (\Exception $e) {
+                Log::error('Error sending pest control notification: ' . $e->getMessage());
+            }
 
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' المكافحة بنجاح';
 

@@ -15,32 +15,67 @@ class FirebaseNotificationService
 
     public function __construct()
     {
-        // التحقق من وجود ملف Firebase قبل محاولة قراءته
-        $firebaseConfigPath = storage_path('app/firebase-service-account.json');
-
-        if (file_exists($firebaseConfigPath)) {
-            try {
-                $firebaseConfig = json_decode(file_get_contents($firebaseConfigPath), true);
-                $this->projectId = $firebaseConfig['project_id'] ?? null;
-            } catch (\Exception $e) {
-                Log::error('Error reading Firebase config file: ' . $e->getMessage());
-                $this->projectId = null;
-            }
-        } else {
-            Log::warning('Firebase service account file not found at: ' . $firebaseConfigPath);
-            $this->projectId = null;
-        }
-
+        // قراءة إعدادات Firebase من ملف الإعدادات
+        $this->projectId = config('services.firebase.project_id', 'deiyar');
         $this->serverKey = config('services.firebase.server_key');
+        
+        // التحقق من وجود ملف Firebase
+        $firebaseConfigPath = config('services.firebase.service_account_path');
+        
+        if (!file_exists($firebaseConfigPath)) {
+            Log::warning('Firebase service account file not found at: ' . $firebaseConfigPath);
+        } else {
+            Log::info('Firebase service account file loaded successfully');
+        }
     }
 
     /**
      * إرسال إشعار لجميع عمال النظافة
      */
-    public function sendToAllCleaners($title, $body, $data = [])
+    public function sendToAllCleaners($title, $body, $data = [], $excludeCleanerId = null)
     {
-        // استخدام Job لإرسال الإشعارات في الخلفية
-        SendNotificationJob::dispatch($title, $body, $data);
+        // جلب جميع عمال النظافة النشطين الذين لديهم FCM token
+        $cleaners = Cleaner::where('status', 'active')
+            ->whereNotNull('fcm_token')
+            ->when($excludeCleanerId, function ($query) use ($excludeCleanerId) {
+                return $query->where('id', '!=', $excludeCleanerId);
+            })
+            ->get();
+
+        if ($cleaners->isEmpty()) {
+            Log::info('No active cleaners with FCM tokens found');
+            return false;
+        }
+
+        $successCount = 0;
+        $failCount = 0;
+
+        foreach ($cleaners as $cleaner) {
+            $notification = Notification::create([
+                'cleaner_id' => $cleaner->id,
+                'title' => $title,
+                'body' => $body,
+                'type' => $data['type'] ?? 'general',
+                'data' => $data,
+                'fcm_token' => $cleaner->fcm_token,
+            ]);
+
+            $response = $this->sendFCMNotification($cleaner->fcm_token, $title, $body, $data);
+
+            if ($response && $response->successful()) {
+                $notification->markAsSent();
+                $successCount++;
+                Log::info("Notification sent successfully to cleaner: {$cleaner->id}");
+            } else {
+                $failCount++;
+                Log::error("Failed to send notification to cleaner: {$cleaner->id}", [
+                    'response' => $response ? $response->body() : 'No response'
+                ]);
+            }
+        }
+
+        Log::info("Notification broadcast completed. Success: {$successCount}, Failed: {$failCount}");
+        return $successCount > 0;
     }
 
     /**
@@ -87,30 +122,115 @@ class FirebaseNotificationService
             return null;
         }
 
-        $url = "https://fcm.googleapis.com/fcm/send";
+        // استخدام Firebase Cloud Messaging API v1
+        $url = "https://fcm.googleapis.com/v1/projects/{$this->projectId}/messages:send";
 
         $payload = [
-            'to' => $token,
-            'notification' => [
-                'title' => $title,
-                'body' => $body,
-                'sound' => 'default',
-                'badge' => 1,
+            'message' => [
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $body,
+                ],
+                'data' => array_merge($data, [
+                    'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
+                    'sound' => 'default',
+                ]),
+                'android' => [
+                    'priority' => 'high',
+                    'notification' => [
+                        'sound' => 'default',
+                        'priority' => 'high',
+                    ],
+                ],
+                'apns' => [
+                    'payload' => [
+                        'aps' => [
+                            'sound' => 'default',
+                            'badge' => 1,
+                        ],
+                    ],
+                ],
             ],
-            'data' => array_merge($data, [
-                'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
-                'sound' => 'default',
-            ]),
-            'priority' => 'high',
         ];
 
         try {
+            // الحصول على access token من Firebase
+            $accessToken = $this->getAccessToken();
+            
+            if (!$accessToken) {
+                Log::error('Failed to get Firebase access token');
+                return null;
+            }
+
             return Http::withHeaders([
-                'Authorization' => 'key=' . $this->serverKey,
+                'Authorization' => 'Bearer ' . $accessToken,
                 'Content-Type' => 'application/json',
             ])->post($url, $payload);
         } catch (\Exception $e) {
             Log::error('FCM notification error: ' . $e->getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * الحصول على access token من Firebase
+     */
+    private function getAccessToken()
+    {
+        try {
+            $firebaseConfigPath = config('services.firebase.service_account_path');
+            
+            if (!file_exists($firebaseConfigPath)) {
+                Log::error('Firebase service account file not found');
+                return null;
+            }
+
+            $serviceAccount = json_decode(file_get_contents($firebaseConfigPath), true);
+            
+            $payload = [
+                'iss' => $serviceAccount['client_email'],
+                'scope' => 'https://www.googleapis.com/auth/firebase.messaging',
+                'aud' => 'https://oauth2.googleapis.com/token',
+                'iat' => time(),
+                'exp' => time() + 3600,
+            ];
+
+            $header = [
+                'alg' => 'RS256',
+                'typ' => 'JWT',
+            ];
+
+            $headerEncoded = $this->base64url_encode(json_encode($header));
+            $payloadEncoded = $this->base64url_encode(json_encode($payload));
+            
+            $signature = '';
+            $privateKey = $serviceAccount['private_key'];
+            
+            openssl_sign(
+                $headerEncoded . '.' . $payloadEncoded,
+                $signature,
+                $privateKey,
+                'SHA256'
+            );
+            
+            $signatureEncoded = $this->base64url_encode($signature);
+            $jwt = $headerEncoded . '.' . $payloadEncoded . '.' . $signatureEncoded;
+
+            $response = Http::asForm()->post('https://oauth2.googleapis.com/token', [
+                'grant_type' => 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+                'assertion' => $jwt,
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return $data['access_token'] ?? null;
+            }
+
+            Log::error('Failed to get access token: ' . $response->body());
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Error getting Firebase access token: ' . $e->getMessage());
             return null;
         }
     }
@@ -203,5 +323,13 @@ class FirebaseNotificationService
         ];
 
         return $this->sendToAllCleaners($title, $body, $data);
+    }
+
+    /**
+     * دالة مساعدة لترميز base64url
+     */
+    private function base64url_encode($data)
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 }

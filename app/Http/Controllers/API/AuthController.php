@@ -243,4 +243,61 @@ class AuthController extends Controller
 
         return $this->apiResponse(null, 'تم تحديث كلمة المرور بنجاح');
     }
+
+    /**
+     * تحديث FCM Token
+     */
+    public function updateFcmToken(Request $request)
+    {
+        $cleaner = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'fcm_token' => 'required|string',
+        ], [
+            'fcm_token.required' => 'FCM Token مطلوب',
+            'fcm_token.string' => 'FCM Token يجب أن يكون نص',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse(null, $validator->errors()->first(), 422);
+        }
+
+        try {
+            $cleaner->update([
+                'fcm_token' => $request->fcm_token
+            ]);
+
+            return $this->apiResponse([
+                'cleaner_id' => $cleaner->id,
+                'fcm_token' => $cleaner->fcm_token,
+                'updated_at' => $cleaner->updated_at,
+            ], 'تم تحديث FCM Token بنجاح');
+        } catch (\Exception $e) {
+            Log::error('Error updating FCM token: ' . $e->getMessage());
+            return $this->apiResponse(null, 'حدث خطأ أثناء تحديث FCM Token', 500);
+        }
+    }
+
+    /**
+     * إزالة FCM Token
+     */
+    public function removeFcmToken(Request $request)
+    {
+        $cleaner = $request->user();
+
+        try {
+            $cleaner->update([
+                'fcm_token' => null
+            ]);
+
+            return $this->apiResponse([
+                'cleaner_id' => $cleaner->id,
+                'fcm_token' => null,
+                'updated_at' => $cleaner->updated_at,
+            ], 'تم إزالة FCM Token بنجاح');
+        } catch (\Exception $e) {
+            Log::error('Error removing FCM token: ' . $e->getMessage());
+            return $this->apiResponse(null, 'حدث خطأ أثناء إزالة FCM Token', 500);
+        }
+    }
 }

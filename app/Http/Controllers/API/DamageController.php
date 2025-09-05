@@ -9,6 +9,7 @@ use App\Models\Damage;
 use App\Models\DamageImage;
 use App\Models\DamageVideo;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -159,6 +160,29 @@ class DamageController extends Controller
                     'videos_count' => count($uploadedVideos),
                 ],
             ];
+
+            // إرسال إشعار لجميع عمال النظافة الآخرين
+            try {
+                $firebaseService = new FirebaseNotificationService();
+                $cleaner = $request->user();
+                
+                $title = 'بلاغ ضرر جديد';
+                $body = "قام {$cleaner->name} بتسجيل بلاغ ضرر للشاليه: {$chalet->name}";
+                
+                $data = [
+                    'type' => 'damage',
+                    'damage_id' => $damage->id,
+                    'chalet_id' => $chaletId,
+                    'chalet_name' => $chalet->name,
+                    'cleaner_name' => $cleaner->name,
+                    'description' => $damage->description,
+                    'price' => $damage->price,
+                ];
+                
+                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+            } catch (\Exception $e) {
+                Log::error('Error sending damage notification: ' . $e->getMessage());
+            }
 
             return $this->apiResponse(null, 'تم رفع تقرير الضرر بنجاح', 201);
 

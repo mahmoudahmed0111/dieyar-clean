@@ -363,4 +363,307 @@ class ChaletController extends Controller
 
         return $this->apiResponse($response, 'تم جلب معلومات الشاليه بنجاح');
     }
+
+    /**
+     * عرض معلومات الخدمات (الصيانة، المكافحة) للشاليه
+     */
+    public function serviceInfo(Request $request)
+    {
+        // التحقق من البيانات المطلوبة
+        $validator = Validator::make($request->all(), [
+            'chalet_id' => 'required|exists:chalets,id',
+            'type' => 'required|in:maintenance,pest_control',
+            'date' => 'required|date',
+            'media_type' => 'required|in:before,after',
+        ], [
+            'chalet_id.required' => 'معرف الشاليه مطلوب',
+            'chalet_id.exists' => 'الشاليه غير موجود',
+            'type.required' => 'نوع الخدمة مطلوب',
+            'type.in' => 'نوع الخدمة يجب أن يكون maintenance أو pest_control',
+            'date.required' => 'تاريخ الخدمة مطلوب',
+            'date.date' => 'تاريخ الخدمة غير صحيح',
+            'media_type.required' => 'نوع الوسائط مطلوب',
+            'media_type.in' => 'نوع الوسائط يجب أن يكون before أو after',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse(null, $validator->errors()->first(), 422);
+        }
+
+        $chaletId = $request->chalet_id;
+        $serviceType = $request->type;
+        $serviceDate = $request->date;
+        $mediaType = $request->media_type;
+
+        // جلب بيانات الشاليه
+        $chalet = Chalet::find($chaletId);
+
+        // تحديد نوع الخدمة والجداول
+        $serviceTable = $this->getServiceTable($serviceType);
+        $imageTable = $this->getImageTable($serviceType);
+        $videoTable = $this->getVideoTable($serviceType);
+
+        // البحث عن سجل الخدمة في التاريخ المحدد
+        $serviceRecord = DB::table($serviceTable)
+            ->where('chalet_id', $chaletId)
+            ->whereDate('created_at', $serviceDate)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // تهيئة المتغيرات للوسائط
+        $images = collect();
+        $videos = collect();
+
+        if ($serviceRecord) {
+            // جلب الصور
+            $images = DB::table($imageTable)
+                ->where($this->getServiceIdColumn($serviceType), $serviceRecord->id)
+                ->get()
+                ->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image' => asset('storage/' . $image->image),
+                        'created_at' => $image->created_at,
+                    ];
+                });
+
+            // جلب الفيديوهات
+            $videos = DB::table($videoTable)
+                ->where($this->getServiceIdColumn($serviceType), $serviceRecord->id)
+                ->get()
+                ->map(function ($video) {
+                    return [
+                        'id' => $video->id,
+                        'video' => asset('storage/' . $video->video),
+                        'created_at' => $video->created_at,
+                    ];
+                });
+        }
+
+        // تجميع البيانات
+        $response = [
+            'chalet' => [
+                'id' => $chalet->id,
+                'name' => $chalet->name,
+                'pass_code' => $chalet->pass_code,
+                'code' => $chalet->code,
+                'floor' => $chalet->floor ?? null,
+                'building' => $chalet->building ?? null,
+                'location' => $chalet->location ?? null,
+                'description' => $chalet->description ?? null,
+                'status' => $chalet->status,
+                'type' => $chalet->type ?? null,
+                'is_cleaned' => (bool) $chalet->is_cleaned,
+                'is_booked' => (bool) $chalet->is_booked,
+            ],
+            'service_info' => [
+                'type' => $this->getServiceTypeName($serviceType),
+                'date' => $serviceDate,
+                'has_record' => (bool) $serviceRecord,
+                'record_id' => $serviceRecord ? $serviceRecord->id : null,
+            ],
+            'media' => [
+                'type' => $mediaType === 'before' ? 'قبل الخدمة' : 'بعد الخدمة',
+                'images' => $images,
+                'videos' => $videos,
+            ],
+        ];
+
+        // إضافة تفاصيل الخدمة إذا وجدت
+        if ($serviceRecord) {
+            $response['service_details'] = [
+                'id' => $serviceRecord->id,
+                'description' => $serviceRecord->description ?? null,
+                'status' => $serviceRecord->status,
+                'price' => $serviceRecord->price ?? null,
+                'notes' => $serviceRecord->notes ?? null,
+                'created_at' => $serviceRecord->created_at,
+                'updated_at' => $serviceRecord->updated_at,
+            ];
+        }
+
+        return $this->apiResponse($response, 'تم جلب معلومات الخدمة بنجاح');
+    }
+
+    /**
+     * عرض معلومات التلفيات للشاليه
+     */
+    public function damageInfo(Request $request)
+    {
+        // التحقق من البيانات المطلوبة
+        $validator = Validator::make($request->all(), [
+            'chalet_id' => 'required|exists:chalets,id',
+            'date' => 'required|date',
+        ], [
+            'chalet_id.required' => 'معرف الشاليه مطلوب',
+            'chalet_id.exists' => 'الشاليه غير موجود',
+            'date.required' => 'تاريخ التلفيات مطلوب',
+            'date.date' => 'تاريخ التلفيات غير صحيح',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->apiResponse(null, $validator->errors()->first(), 422);
+        }
+
+        $chaletId = $request->chalet_id;
+        $damageDate = $request->date;
+
+        // جلب بيانات الشاليه
+        $chalet = Chalet::find($chaletId);
+
+        // البحث عن سجل التلفيات في التاريخ المحدد
+        $damageRecord = DB::table('damages')
+            ->where('chalet_id', $chaletId)
+            ->whereDate('created_at', $damageDate)
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // تهيئة المتغيرات للوسائط
+        $images = collect();
+        $videos = collect();
+
+        if ($damageRecord) {
+            // جلب الصور
+            $images = DB::table('damage_images')
+                ->where('damage_id', $damageRecord->id)
+                ->get()
+                ->map(function ($image) {
+                    return [
+                        'id' => $image->id,
+                        'image' => asset('storage/' . $image->image),
+                        'created_at' => $image->created_at,
+                    ];
+                });
+
+            // جلب الفيديوهات
+            $videos = DB::table('damage_videos')
+                ->where('damage_id', $damageRecord->id)
+                ->get()
+                ->map(function ($video) {
+                    return [
+                        'id' => $video->id,
+                        'video' => asset('storage/' . $video->video),
+                        'created_at' => $video->created_at,
+                    ];
+                });
+        }
+
+        // تجميع البيانات
+        $response = [
+            'chalet' => [
+                'id' => $chalet->id,
+                'name' => $chalet->name,
+                'pass_code' => $chalet->pass_code,
+                'code' => $chalet->code,
+                'floor' => $chalet->floor ?? null,
+                'building' => $chalet->building ?? null,
+                'location' => $chalet->location ?? null,
+                'description' => $chalet->description ?? null,
+                'status' => $chalet->status,
+                'type' => $chalet->type ?? null,
+                'is_cleaned' => (bool) $chalet->is_cleaned,
+                'is_booked' => (bool) $chalet->is_booked,
+            ],
+            'damage_info' => [
+                'type' => 'تقرير تلفيات',
+                'date' => $damageDate,
+                'has_record' => (bool) $damageRecord,
+                'record_id' => $damageRecord ? $damageRecord->id : null,
+            ],
+            'media' => [
+                'images' => $images,
+                'videos' => $videos,
+            ],
+        ];
+
+        // إضافة تفاصيل التلفيات إذا وجدت
+        if ($damageRecord) {
+            $response['damage_details'] = [
+                'id' => $damageRecord->id,
+                'description' => $damageRecord->description ?? null,
+                'status' => $damageRecord->status,
+                'price' => $damageRecord->price ?? null,
+                'reported_at' => $damageRecord->reported_at,
+                'created_at' => $damageRecord->created_at,
+                'updated_at' => $damageRecord->updated_at,
+            ];
+        }
+
+        return $this->apiResponse($response, 'تم جلب معلومات التلفيات بنجاح');
+    }
+
+    /**
+     * الحصول على اسم جدول الخدمة
+     */
+    private function getServiceTable($serviceType)
+    {
+        switch ($serviceType) {
+            case 'maintenance':
+                return 'maintenance';
+            case 'pest_control':
+                return 'pest_controls';
+            default:
+                return 'maintenance';
+        }
+    }
+
+    /**
+     * الحصول على اسم جدول الصور
+     */
+    private function getImageTable($serviceType)
+    {
+        switch ($serviceType) {
+            case 'maintenance':
+                return 'maintenance_images';
+            case 'pest_control':
+                return 'pest_control_images';
+            default:
+                return 'maintenance_images';
+        }
+    }
+
+    /**
+     * الحصول على اسم جدول الفيديوهات
+     */
+    private function getVideoTable($serviceType)
+    {
+        switch ($serviceType) {
+            case 'maintenance':
+                return 'maintenance_videos';
+            case 'pest_control':
+                return 'pest_control_videos';
+            default:
+                return 'maintenance_videos';
+        }
+    }
+
+    /**
+     * الحصول على اسم عمود معرف الخدمة
+     */
+    private function getServiceIdColumn($serviceType)
+    {
+        switch ($serviceType) {
+            case 'maintenance':
+                return 'maintenance_id';
+            case 'pest_control':
+                return 'pest_control_id';
+            default:
+                return 'maintenance_id';
+        }
+    }
+
+    /**
+     * الحصول على اسم نوع الخدمة بالعربية
+     */
+    private function getServiceTypeName($serviceType)
+    {
+        switch ($serviceType) {
+            case 'maintenance':
+                return 'طلب صيانة';
+            case 'pest_control':
+                return 'مكافحة حشرات';
+            default:
+                return 'خدمة';
+        }
+    }
 }

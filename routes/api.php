@@ -14,6 +14,7 @@ use App\Http\Controllers\API\DeepCleaningController;
 use App\Http\Controllers\API\RegularCleaningController;
 use App\Http\Controllers\API\NotificationController;
 use App\Http\Controllers\API\CleaningController;
+use App\Http\Controllers\API\TestNotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -34,6 +35,8 @@ Route::prefix('chalets')->group(function () {
     Route::get('/', [ChaletController::class, 'index']);
     Route::get('/stats', [ChaletController::class, 'stats']);
     Route::get('/info', [ChaletController::class, 'chaletInfo']);
+    Route::get('/service-info', [ChaletController::class, 'serviceInfo']);
+    Route::get('/damage-info', [ChaletController::class, 'damageInfo']);
     Route::get('/{chalet}', [ChaletController::class, 'show']);
 });
 
@@ -46,6 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profile', [AuthController::class, 'profile']);
     Route::post('/profile', [AuthController::class, 'updateProfile']);
     Route::put('/password', [AuthController::class, 'updatePassword']);
+    
+    // FCM Token Routes
+    Route::post('/fcm-token', [AuthController::class, 'updateFcmToken']);
+    Route::delete('/fcm-token', [AuthController::class, 'removeFcmToken']);
 
 
     // Chalets routes
@@ -114,5 +121,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/upload', [CleaningController::class, 'uploadCleaning']);
         Route::get('/history', [CleaningController::class, 'getCleaningHistory']);
         Route::get('/details/{id}', [CleaningController::class, 'getCleaningDetails']);
+    });
+
+    // Test routes - اختبار الإشعارات
+    Route::prefix('test')->group(function () {
+        Route::post('/notification', [TestNotificationController::class, 'sendTestNotification']);
+        Route::get('/firebase-config', [TestNotificationController::class, 'testFirebaseConfig']);
     });
 });

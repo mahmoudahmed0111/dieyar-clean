@@ -9,6 +9,7 @@ use App\Models\Maintenance;
 use App\Models\MaintenanceImage;
 use App\Models\MaintenanceVideo;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
@@ -185,6 +186,29 @@ class MaintenanceController extends Controller
                     'time' => $cleaningTime === 'before' ? 'قبل الصيانة' : 'بعد الصيانة',
                 ]
             ];
+
+            // إرسال إشعار لجميع عمال النظافة الآخرين
+            try {
+                $firebaseService = new FirebaseNotificationService();
+                $cleaner = $request->user();
+                
+                $title = 'تقرير صيانة جديد';
+                $body = "قام {$cleaner->name} برفع " . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . " الصيانة للشاليه: {$chalet->name}";
+                
+                $data = [
+                    'type' => 'maintenance',
+                    'maintenance_id' => $maintenance->id,
+                    'chalet_id' => $chaletId,
+                    'chalet_name' => $chalet->name,
+                    'cleaner_name' => $cleaner->name,
+                    'cleaning_time' => $cleaningTime,
+                    'description' => $maintenance->description,
+                ];
+                
+                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+            } catch (\Exception $e) {
+                Log::error('Error sending maintenance notification: ' . $e->getMessage());
+            }
 
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' الصيانة بنجاح';
 
