@@ -1,6 +1,0 @@
-# Firebase Settings
-FIREBASE_PROJECT_ID=deiyar
-FIREBASE_SERVER_KEY=your_firebase_server_key_here
-
-# Note: Firebase Server Key can be found in:
-# Firebase Console > Project Settings > Cloud Messaging > Server Key

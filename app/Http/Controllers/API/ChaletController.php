@@ -90,7 +90,7 @@ class ChaletController extends Controller
                 'per_page' => $chalets->perPage(),
                 'total' => $chalets->total(),
                 'from' => $chalets->firstItem(),
-                'to' => $chalets->lastItem(),
+                'to' => $chalets->lastItem(), 
             ]
         ], 'تم جلب الشاليهات بنجاح');
     }

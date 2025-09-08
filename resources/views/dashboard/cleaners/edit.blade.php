@@ -35,6 +35,28 @@
                         @enderror
                     </div>
                     <div class="form-group">
+                        <label for="phone" class="form-label">{{ __('trans.phone') }}<span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" id="phone" name="phone" value="{{ old('phone', $cleaner->phone) }}"
+                                class="form-input @error('phone') error @enderror" placeholder="{{ __('trans.enter_phone_number') }}"
+                                required>
+                        </div>
+                        @error('phone')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">{{ __('trans.email') }}<span class="required">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="email" id="email" name="email" value="{{ old('email', $cleaner->email) }}"
+                                class="form-input @error('email') error @enderror" placeholder="{{ __('trans.enter_email') }}"
+                                required>
+                        </div>
+                        @error('email')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
                         <label for="national_id" class="form-label">{{ __('trans.national_id') }}</label>
                         <div class="input-wrapper">
                             <input type="text" id="national_id" name="national_id"
@@ -55,6 +77,18 @@
                                 placeholder="{{ __('trans.enter_address') }}">
                         </div>
                         @error('address')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+                    <div class="form-group">
+                        <label for="password" class="form-label">{{ __('trans.password') }}</label>
+                        <div class="input-wrapper">
+                            <input type="password" id="password" name="password"
+                                class="form-input @error('password') error @enderror"
+                                placeholder="{{ __('trans.enter_new_password_or_leave_empty') }}">
+                        </div>
+                        <small class="form-text">{{ __('trans.leave_password_empty_to_keep_current') }}</small>
+                        @error('password')
                             <span class="error-message">{{ $message }}</span>
                         @enderror
                     </div>

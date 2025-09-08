@@ -47,6 +47,15 @@
                         <span class="error-message">{{ $message }}</span>
                     @enderror
                 </div>
+                <div class="form-group">
+                    <label for="password" class="form-label">{{ __('trans.password') }}<span class="required">*</span></label>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" name="password" class="form-input @error('password') error @enderror" placeholder="{{ __('trans.enter_password') }}" required>
+                    </div>
+                    @error('password')
+                        <span class="error-message">{{ $message }}</span>
+                    @enderror
+                </div>
 
                 <div class="form-group">
                     <label for="national_id" class="form-label">{{ __('trans.national_id') }}</label>

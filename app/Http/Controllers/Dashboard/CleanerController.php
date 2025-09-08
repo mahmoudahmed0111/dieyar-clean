@@ -36,6 +36,7 @@ class CleanerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
+            'password' => 'required|string|min:6',
             'national_id' => 'required|string|max:50',
             'address' => 'required|string|max:255',
             'hire_date' => 'required|date',
@@ -60,15 +61,28 @@ class CleanerController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255',
             'phone' => 'required|string|max:255',
+            'password' => 'nullable|string|min:6',
             'national_id' => 'required|string|max:50',
             'address' => 'required|string|max:255',
             'hire_date' => 'required|date',
             'status' => 'required|in:active,inactive',
             'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
         ]);
+        
+        // Remove password from validated data if it's empty
+        if (empty($validated['password'])) {
+            unset($validated['password']);
+        }
+        
+        // Handle image upload
         if ($request->hasFile('image')) {
+            // Delete old image if exists
+            if ($cleaner->image && \Storage::disk('public')->exists($cleaner->image)) {
+                \Storage::disk('public')->delete($cleaner->image);
+            }
             $validated['image'] = $request->file('image')->store('cleaners', 'public');
         }
+        
         $cleaner->update($validated);
         return redirect()->route('dashboard.cleaners.index')->with('success', __('Cleaner updated successfully.'));
     }
