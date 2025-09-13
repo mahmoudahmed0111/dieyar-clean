@@ -38,8 +38,18 @@
             'description' => $damage->description,
             'price' => $damage->price,
             'status' => '<span class="status-badge status-'.($damage->status == 'pending' ? 'danger' : 'success').'">'.__($damage->status).'</span>',
-            'images' => collect($damage->images)->map(function($img){ return '<img src="'.asset('storage/'.$img->image).'" style="width:40px;height:40px;border-radius:8px;object-fit:cover;" alt="img">'; })->implode(' '),
-            'videos' => collect($damage->videos)->map(function($vid){ return '<a href="'.asset('storage/'.$vid->video).'" target="_blank"><i class="fa fa-play"></i></a>'; })->implode('<br>'),
+            'images' => $damage->images->count() > 0 
+                ? '<a href="'.asset('storage/'.$damage->images->first()->image).'" class="glightbox btn btn-sm btn-info" data-gallery="damage-'.$damage->id.'"><i class="fas fa-images"></i></a>' . 
+                  collect($damage->images)->skip(1)->map(function($img) use ($damage) {
+                      return '<a href="'.asset('storage/'.$img->image).'" class="glightbox" data-gallery="damage-'.$damage->id.'" style="display:none;"></a>';
+                  })->implode('')
+                : '<span class="text-muted">No images</span>',
+            'videos' => $damage->videos->count() > 0 
+                ? '<a href="'.asset('storage/'.$damage->videos->first()->video).'" class="glightbox btn btn-sm btn-primary" data-type="video" data-gallery="damagev-'.$damage->id.'"><i class="fas fa-play"></i></a>' . 
+                  collect($damage->videos)->skip(1)->map(function($vid) use ($damage) {
+                      return '<a href="'.asset('storage/'.$vid->video).'" class="glightbox" data-type="video" data-gallery="damagev-'.$damage->id.'" style="display:none;"></a>';
+                  })->implode('')
+                : '<span class="text-muted">No videos</span>',
             'actions' => view('dashboard.damages._actions', compact('damage'))->render(),
         ];
     });
@@ -51,15 +61,117 @@
 @section('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Delete confirmation
-    const deleteForms = document.querySelectorAll('.delete-form');
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', (e) => {
-            if (!confirm('{{ __("trans.are_you_sure_you_want_to_delete_this_damage_this_action_cannot_be_undone") }}')) {
-                e.preventDefault();
+    // Initialize GLightbox for image galleries
+    if (typeof GLightbox !== 'undefined') {
+        const lightbox = GLightbox({
+            selector: '.glightbox',
+            touchNavigation: true,
+            loop: true,
+            autoplayVideos: false,
+            zoomable: true,
+            draggable: true,
+            dragToleranceX: 40,
+            dragToleranceY: 65,
+            preload: true,
+            skin: 'clean',
+            openEffect: 'zoom',
+            closeEffect: 'zoom',
+            slideEffect: 'slide',
+            closeOnOutsideClick: true,
+            startAt: 0,
+            width: '90vw',
+            height: '90vh',
+            descPosition: 'bottom',
+            arrows: true,
+            counter: true,
+            touchNavigation: true,
+            keyboardNavigation: true,
+            closeButton: true,
+            autoplayVideos: false,
+            autofocusVideos: false,
+            // Add download functionality
+            onSlideChange: function({ current, prev }) {
+                setTimeout(() => {
+                    addDownloadButton();
+                }, 100);
+            },
+            onOpen: function() {
+                setTimeout(() => {
+                    addDownloadButton();
+                }, 100);
             }
         });
-    });
+
+        // Function to add download button
+        function addDownloadButton() {
+            const lightboxContainer = document.querySelector('.glightbox-container');
+            if (lightboxContainer && !lightboxContainer.querySelector('.download-btn')) {
+                const currentSlide = lightboxContainer.querySelector('.glightbox-slide.current');
+                if (currentSlide) {
+                    const img = currentSlide.querySelector('img');
+                    if (img) {
+                        const downloadBtn = document.createElement('button');
+                        downloadBtn.className = 'download-btn';
+                        downloadBtn.innerHTML = '<i class="fas fa-download"></i> Download';
+                        downloadBtn.style.cssText = `
+                            position: absolute;
+                            top: 20px;
+                            right: 20px;
+                            background: rgba(0,0,0,0.7);
+                            color: white;
+                            border: none;
+                            padding: 10px 15px;
+                            border-radius: 5px;
+                            cursor: pointer;
+                            font-size: 14px;
+                            z-index: 1000;
+                            transition: background 0.3s;
+                        `;
+                        
+                        downloadBtn.addEventListener('mouseenter', function() {
+                            this.style.background = 'rgba(0,0,0,0.9)';
+                        });
+                        
+                        downloadBtn.addEventListener('mouseleave', function() {
+                            this.style.background = 'rgba(0,0,0,0.7)';
+                        });
+                        
+                        downloadBtn.addEventListener('click', function() {
+                            downloadImage(img.src, getImageName(img.src));
+                        });
+                        
+                        lightboxContainer.appendChild(downloadBtn);
+                    }
+                }
+            }
+        }
+
+        // Function to download image
+        function downloadImage(url, filename) {
+            fetch(url)
+                .then(response => response.blob())
+                .then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = filename;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(link.href);
+                })
+                .catch(error => {
+                    console.error('Download failed:', error);
+                    window.open(url, '_blank');
+                });
+        }
+
+        // Function to get image name from URL
+        function getImageName(url) {
+            const urlParts = url.split('/');
+            const filename = urlParts[urlParts.length - 1];
+            return filename || 'damage-image.jpg';
+        }
+    }
 });
 </script>
 @endsection

@@ -145,12 +145,31 @@ class ChaletController extends Controller
 
     public function destroy(Chalet $chalet)
     {
-        DB::transaction(function () use ($chalet) {
-            $chalet->images()->delete();
-            $chalet->videos()->delete();
-            $chalet->delete();
-        });
-        return redirect()->route('dashboard.chalets.index')->with('success', __('trans.chalet_deleted_successfully'));
+        try {
+            DB::transaction(function () use ($chalet) {
+                $chalet->images()->delete();
+                $chalet->videos()->delete();
+                $chalet->delete();
+            });
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('trans.chalet_deleted_successfully')
+                ]);
+            }
+            
+            return redirect()->route('dashboard.chalets.index')->with('success', __('trans.chalet_deleted_successfully'));
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('dashboard.chalets.index')->with('error', 'حدث خطأ أثناء الحذف: ' . $e->getMessage());
+        }
     }
 
     public function uploadVideo(Request $request)

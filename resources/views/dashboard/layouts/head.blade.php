@@ -14,7 +14,7 @@
 
 <!-- Preload critical resources -->
 <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" as="style">
-<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" as="style">
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" as="style">
 <link rel="preload" href="{{ asset('assets/dashboard.css') }}" as="style">
 <link rel="preload" href="{{ asset('assets/dashboard-rtl.css') }}" as="style">
 
@@ -23,13 +23,16 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-AoS2qKQq3OON3Q0Xk9RRNyS5AxM5oPzEjorD4V3q2mlJ6uvZMi1IXQ4eMQytEJR2XexH5vC4myY3o9X-Yitmkg==" crossorigin="anonymous" referrerpolicy="no-referrer">
-<!-- Font Awesome Kit (Backup) -->
-<script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
+<!-- Font Awesome 6 Free -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer">
+<!-- Font Awesome Fallback -->
+<link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css" crossorigin="anonymous">
 
 <!-- GLightbox for image/video lightbox -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css">
+
+<!-- SweetAlert2 for beautiful alerts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Custom CSS -->
 @if (app()->getLocale() == 'ar')
@@ -40,17 +43,41 @@
 
 <!-- Font Awesome Fix -->
 <style>
+/* Ensure Font Awesome icons load properly */
 .fa, .fas, .far, .fal, .fab {
-    font-family: "Font Awesome 6 Free", "Font Awesome 6 Pro", "Font Awesome 5 Free", "Font Awesome 5 Pro", "FontAwesome" !important;
+    font-family: "Font Awesome 6 Free" !important;
+    font-weight: 900;
     font-style: normal;
     font-variant: normal;
     text-rendering: auto;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-.fa-edit:before { content: "\f044"; }
-.fa-trash:before { content: "\f1f8"; }
-.fa-edit, .fa-trash {
-    font-weight: 900;
+
+.far {
+    font-weight: 400;
+}
+
+.fab {
+    font-weight: 400;
+}
+
+/* Button icon spacing */
+.btn i {
+    margin-right: 0.25rem;
+}
+
+.btn i:only-child {
+    margin-right: 0;
+}
+
+/* Ensure icons are visible */
+i[class*="fa-"] {
+    display: inline-block;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    line-height: 1;
 }
 </style>
 
@@ -62,5 +89,4 @@
 <link rel="dns-prefetch" href="//cdnjs.cloudflare.com">
 <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
 
-
-
+@yield('css')

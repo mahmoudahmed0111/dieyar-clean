@@ -89,12 +89,31 @@ class DamageController extends Controller
 
     public function destroy(Damage $damage)
     {
-        DB::transaction(function () use ($damage) {
-            $damage->images()->delete();
-            $damage->videos()->delete();
-            $damage->delete();
-        });
-        return redirect()->route('dashboard.damages.index')->with('success', __('Damage deleted successfully.'));
+        try {
+            DB::transaction(function () use ($damage) {
+                $damage->images()->delete();
+                $damage->videos()->delete();
+                $damage->delete();
+            });
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Damage deleted successfully.')
+                ]);
+            }
+            
+            return redirect()->route('dashboard.damages.index')->with('success', __('Damage deleted successfully.'));
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('dashboard.damages.index')->with('error', 'حدث خطأ أثناء الحذف: ' . $e->getMessage());
+        }
     }
 
     public function uploadVideo(Request $request)

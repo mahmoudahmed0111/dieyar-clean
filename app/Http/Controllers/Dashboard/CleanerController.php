@@ -89,8 +89,27 @@ class CleanerController extends Controller
 
     public function destroy(Cleaner $cleaner)
     {
-        $cleaner->delete();
-        return redirect()->route('dashboard.cleaners.index')->with('success', __('Cleaner deleted successfully.'));
+        try {
+            $cleaner->delete();
+            
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => __('Cleaner deleted successfully.')
+                ]);
+            }
+            
+            return redirect()->route('dashboard.cleaners.index')->with('success', __('Cleaner deleted successfully.'));
+        } catch (\Exception $e) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'حدث خطأ أثناء الحذف: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return redirect()->route('dashboard.cleaners.index')->with('error', 'حدث خطأ أثناء الحذف: ' . $e->getMessage());
+        }
     }
 
     public function toggleStatus(Cleaner $cleaner)

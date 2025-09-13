@@ -337,4 +337,6 @@ return [
     'is_booked' => 'Is Booked',
     'mark_as_cleaned' => 'Mark as Cleaned',
     'mark_as_booked' => 'Mark as Booked',
+    'pass_code' => 'Pass Code',
+    'enter_pass_code' => 'Enter Pass Code',
 ];

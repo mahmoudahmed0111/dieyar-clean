@@ -355,5 +355,7 @@ return [
         'required' => 'مطلوب',
         'pass_code' => 'كلمة السر',
         'enter_pass_code' => 'أدخل كلمة السر',
+        'pass_code' => 'كلمة السر',
+        'enter_pass_code' => 'أدخل كلمة السر',
 
 ];

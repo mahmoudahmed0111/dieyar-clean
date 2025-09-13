@@ -63,17 +63,7 @@
 @section('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Delete confirmation
-            const deleteForms = document.querySelectorAll('.delete-form');
-            deleteForms.forEach(form => {
-                form.addEventListener('submit', (e) => {
-                    if (!confirm(
-                            '{{ __('trans.are_you_sure_you_want_to_delete_this_cleaner_this_action_cannot_be_undone') }}'
-                            )) {
-                        e.preventDefault();
-                    }
-                });
-            });
+            // Cleaners page specific functionality can be added here
         });
     </script>
 @endsection

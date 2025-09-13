@@ -125,23 +125,6 @@
                 });
             });
 
-            // Loading states for buttons
-            document.querySelectorAll('.btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    if (!this.classList.contains('loading')) {
-                        this.classList.add('loading');
-                        const originalText = this.textContent;
-                        this.innerHTML = '<span class="spinner"></span> جاري التحميل...';
-
-                        // Simulate loading (remove in production)
-                        setTimeout(() => {
-                            this.classList.remove('loading');
-                            this.textContent = originalText;
-                        }, 2000);
-                    }
-                });
-            });
-
             // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 // Ctrl/Cmd + K to toggle sidebar
@@ -231,12 +214,112 @@
             });
         });
 
+        // Font Awesome fallback check
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if Font Awesome is loaded
+            const testIcon = document.createElement('i');
+            testIcon.className = 'fas fa-home';
+            testIcon.style.position = 'absolute';
+            testIcon.style.left = '-9999px';
+            document.body.appendChild(testIcon);
+            
+            const computedStyle = window.getComputedStyle(testIcon, ':before');
+            const fontFamily = computedStyle.getPropertyValue('font-family');
+            
+            if (!fontFamily.includes('Font Awesome')) {
+                console.warn('Font Awesome not loaded, attempting fallback...');
+                // Load Font Awesome via JavaScript as fallback
+                const link = document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+                document.head.appendChild(link);
+            }
+            
+            document.body.removeChild(testIcon);
+        });
+
         try {
             new simpleDatatables.DataTable("#dataTable", {
                 searchable: !0,
                 fixedHeight: !1,
             });
         } catch (e) {}
+
+        // SweetAlert delete confirmation for all delete forms
+        document.querySelectorAll('.delete-form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const action = this.action;
+                const method = formData.get('_method') || 'POST';
+                
+                Swal.fire({
+                    title: 'هل أنت متأكد؟',
+                    text: "لن تتمكن من التراجع عن هذا الإجراء!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'نعم، احذف!',
+                    cancelButtonText: 'إلغاء',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Show loading
+                        Swal.fire({
+                            title: 'جاري الحذف...',
+                            text: 'يرجى الانتظار',
+                            allowOutsideClick: false,
+                            showConfirmButton: false,
+                            willOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+                        
+                        // Submit the form
+                        fetch(action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'تم الحذف!',
+                                    text: 'تم حذف العنصر بنجاح',
+                                    icon: 'success',
+                                    confirmButtonText: 'حسناً'
+                                }).then(() => {
+                                    // Reload the page or remove the row
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'خطأ!',
+                                    text: data.message || 'حدث خطأ أثناء الحذف',
+                                    icon: 'error',
+                                    confirmButtonText: 'حسناً'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            Swal.fire({
+                                title: 'خطأ!',
+                                text: 'حدث خطأ في الاتصال',
+                                icon: 'error',
+                                confirmButtonText: 'حسناً'
+                            });
+                        });
+                    }
+                });
+            });
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js"></script>
     <script>
@@ -246,3 +329,5 @@
             }
         });
     </script>
+
+@yield('scripts')
