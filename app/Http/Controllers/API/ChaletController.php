@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Chalet;
+use App\Models\Damage;
 use App\Http\Controllers\API\ResponseTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -403,10 +404,9 @@ class ChaletController extends Controller
         $imageTable = $this->getImageTable($serviceType);
         $videoTable = $this->getVideoTable($serviceType);
 
-        // البحث عن سجل الخدمة في التاريخ المحدد
+        // البحث عن أحدث سجل خدمة للشاليه
         $serviceRecord = DB::table($serviceTable)
             ->where('chalet_id', $chaletId)
-            ->whereDate('created_at', $serviceDate)
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -415,6 +415,14 @@ class ChaletController extends Controller
         $videos = collect();
 
         if ($serviceRecord) {
+            // Debug: Log service record info
+            \Log::info('Service record found:', [
+                'id' => $serviceRecord->id,
+                'chalet_id' => $serviceRecord->chalet_id,
+                'service_type' => $serviceType,
+                'table' => $serviceTable,
+            ]);
+
             // جلب الصور
             $images = DB::table($imageTable)
                 ->where($this->getServiceIdColumn($serviceType), $serviceRecord->id)
@@ -438,6 +446,21 @@ class ChaletController extends Controller
                         'created_at' => $video->created_at,
                     ];
                 });
+
+            // Debug: Log media info
+            \Log::info('Service media data:', [
+                'images_count' => $images->count(),
+                'videos_count' => $videos->count(),
+                'media_type' => $mediaType,
+            ]);
+        } else {
+            // Check if there are any services for this chalet at all
+            $allServices = DB::table($serviceTable)->where('chalet_id', $chaletId)->get();
+            \Log::info('No service record found for chalet_id: ' . $chaletId . ' and type: ' . $serviceType);
+            \Log::info('Total services for chalet_id ' . $chaletId . ': ' . $allServices->count());
+            if ($allServices->count() > 0) {
+                \Log::info('Available service dates:', $allServices->pluck('created_at')->toArray());
+            }
         }
 
         // تجميع البيانات
@@ -458,7 +481,7 @@ class ChaletController extends Controller
             ],
             'service_info' => [
                 'type' => $this->getServiceTypeName($serviceType),
-                'date' => $serviceDate,
+                'date' => $serviceRecord ? $serviceRecord->created_at : $serviceDate,
                 'has_record' => (bool) $serviceRecord,
                 'record_id' => $serviceRecord ? $serviceRecord->id : null,
             ],
@@ -511,10 +534,9 @@ class ChaletController extends Controller
         // جلب بيانات الشاليه
         $chalet = Chalet::find($chaletId);
 
-        // البحث عن سجل التلفيات في التاريخ المحدد
-        $damageRecord = DB::table('damages')
-            ->where('chalet_id', $chaletId)
-            ->whereDate('created_at', $damageDate)
+        // البحث عن أحدث سجل تلفيات للشاليه
+        $damageRecord = Damage::where('chalet_id', $chaletId)
+            ->with(['images', 'videos'])
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -523,29 +545,45 @@ class ChaletController extends Controller
         $videos = collect();
 
         if ($damageRecord) {
+            // Debug: Log damage record info
+            \Log::info('Damage record found:', [
+                'id' => $damageRecord->id,
+                'chalet_id' => $damageRecord->chalet_id,
+                'images_count' => $damageRecord->images->count(),
+                'videos_count' => $damageRecord->videos->count(),
+            ]);
+
             // جلب الصور
-            $images = DB::table('damage_images')
-                ->where('damage_id', $damageRecord->id)
-                ->get()
-                ->map(function ($image) {
-                    return [
-                        'id' => $image->id,
-                        'image' => asset('storage/' . $image->image),
-                        'created_at' => $image->created_at,
-                    ];
-                });
+            $images = $damageRecord->images->map(function ($image) {
+                return [
+                    'id' => $image->id,
+                    'image' => asset('storage/' . $image->image),
+                    'created_at' => $image->created_at,
+                ];
+            });
 
             // جلب الفيديوهات
-            $videos = DB::table('damage_videos')
-                ->where('damage_id', $damageRecord->id)
-                ->get()
-                ->map(function ($video) {
-                    return [
-                        'id' => $video->id,
-                        'video' => asset('storage/' . $video->video),
-                        'created_at' => $video->created_at,
-                    ];
-                });
+            $videos = $damageRecord->videos->map(function ($video) {
+                return [
+                    'id' => $video->id,
+                    'video' => asset('storage/' . $video->video),
+                    'created_at' => $video->created_at,
+                ];
+            });
+
+            // Debug: Log media info
+            \Log::info('Media data:', [
+                'images' => $images->toArray(),
+                'videos' => $videos->toArray(),
+            ]);
+        } else {
+            // Check if there are any damages for this chalet at all
+            $allDamages = Damage::where('chalet_id', $chaletId)->get();
+            \Log::info('No damage record found for chalet_id: ' . $chaletId . ' and date: ' . $damageDate);
+            \Log::info('Total damages for chalet_id ' . $chaletId . ': ' . $allDamages->count());
+            if ($allDamages->count() > 0) {
+                \Log::info('Available damage dates:', $allDamages->pluck('created_at')->toArray());
+            }
         }
 
         // تجميع البيانات
@@ -566,7 +604,7 @@ class ChaletController extends Controller
             ],
             'damage_info' => [
                 'type' => 'تقرير تلفيات',
-                'date' => $damageDate,
+                'date' => $damageRecord ? $damageRecord->created_at->format('Y-m-d') : $damageDate,
                 'has_record' => (bool) $damageRecord,
                 'record_id' => $damageRecord ? $damageRecord->id : null,
             ],
