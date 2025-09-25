@@ -404,25 +404,22 @@ class ChaletController extends Controller
         $imageTable = $this->getImageTable($serviceType);
         $videoTable = $this->getVideoTable($serviceType);
 
-        // البحث عن سجل الخدمة في التاريخ المحدد
+        // البحث عن سجل الخدمة في التاريخ المحدد فقط
         $serviceRecord = DB::table($serviceTable)
             ->where('chalet_id', $chaletId)
             ->whereDate('created_at', $serviceDate)
             ->orderBy('created_at', 'desc')
             ->first();
 
+        if (!$serviceRecord) {
+            \Log::info('No service record found for chalet_id: ' . $chaletId . ' and type: ' . $serviceType . ' and date: ' . $serviceDate);
+        }
+
         // تهيئة المتغيرات للوسائط
         $images = collect();
         $videos = collect();
 
         if ($serviceRecord) {
-            // Debug: Log service record info
-            \Log::info('Service record found:', [
-                'id' => $serviceRecord->id,
-                'chalet_id' => $serviceRecord->chalet_id,
-                'service_type' => $serviceType,
-                'table' => $serviceTable,
-            ]);
 
             // جلب الصور
             $images = DB::table($imageTable)
@@ -448,22 +445,6 @@ class ChaletController extends Controller
                     ];
                 });
 
-            // Debug: Log media info
-            \Log::info('Service media data:', [
-                'images_count' => $images->count(),
-                'videos_count' => $videos->count(),
-                'media_type' => $mediaType,
-            ]);
-        } else {
-            // Check if there are any services for this chalet at all
-            $allServices = DB::table($serviceTable)->where('chalet_id', $chaletId)->get();
-            \Log::info('No service record found for chalet_id: ' . $chaletId . ' and type: ' . $serviceType . ' and date: ' . $serviceDate);
-            \Log::info('Total services for chalet_id ' . $chaletId . ': ' . $allServices->count());
-            if ($allServices->count() > 0) {
-                \Log::info('Available service dates:', $allServices->pluck('created_at')->map(function($date) {
-                    return \Carbon\Carbon::parse($date)->format('Y-m-d');
-                })->toArray());
-            }
         }
 
         // تجميع البيانات
@@ -537,25 +518,23 @@ class ChaletController extends Controller
         // جلب بيانات الشاليه
         $chalet = Chalet::find($chaletId);
 
-        // البحث عن سجل التلفيات في التاريخ المحدد
+
+        // البحث عن سجل التلفيات في التاريخ المحدد فقط
         $damageRecord = Damage::where('chalet_id', $chaletId)
             ->whereDate('created_at', $damageDate)
             ->with(['images', 'videos'])
             ->orderBy('created_at', 'desc')
             ->first();
 
+        if (!$damageRecord) {
+            \Log::info('No damage record found for chalet_id: ' . $chaletId . ' and date: ' . $damageDate);
+        }
+
         // تهيئة المتغيرات للوسائط
         $images = collect();
         $videos = collect();
 
         if ($damageRecord) {
-            // Debug: Log damage record info
-            \Log::info('Damage record found:', [
-                'id' => $damageRecord->id,
-                'chalet_id' => $damageRecord->chalet_id,
-                'images_count' => $damageRecord->images->count(),
-                'videos_count' => $damageRecord->videos->count(),
-            ]);
 
             // جلب الصور
             $images = $damageRecord->images->map(function ($image) {
@@ -575,21 +554,6 @@ class ChaletController extends Controller
                 ];
             });
 
-            // Debug: Log media info
-            \Log::info('Media data:', [
-                'images' => $images->toArray(),
-                'videos' => $videos->toArray(),
-            ]);
-        } else {
-            // Check if there are any damages for this chalet at all
-            $allDamages = Damage::where('chalet_id', $chaletId)->get();
-            \Log::info('No damage record found for chalet_id: ' . $chaletId . ' and date: ' . $damageDate);
-            \Log::info('Total damages for chalet_id ' . $chaletId . ': ' . $allDamages->count());
-            if ($allDamages->count() > 0) {
-                \Log::info('Available damage dates:', $allDamages->pluck('created_at')->map(function($date) {
-                    return $date->format('Y-m-d');
-                })->toArray());
-            }
         }
 
         // تجميع البيانات
@@ -632,6 +596,7 @@ class ChaletController extends Controller
                 'updated_at' => $damageRecord->updated_at,
             ];
         }
+
 
         return $this->apiResponse($response, 'تم جلب معلومات التلفيات بنجاح');
     }
