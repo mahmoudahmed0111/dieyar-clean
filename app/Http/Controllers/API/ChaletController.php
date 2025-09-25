@@ -404,9 +404,10 @@ class ChaletController extends Controller
         $imageTable = $this->getImageTable($serviceType);
         $videoTable = $this->getVideoTable($serviceType);
 
-        // البحث عن أحدث سجل خدمة للشاليه
+        // البحث عن سجل الخدمة في التاريخ المحدد
         $serviceRecord = DB::table($serviceTable)
             ->where('chalet_id', $chaletId)
+            ->whereDate('created_at', $serviceDate)
             ->orderBy('created_at', 'desc')
             ->first();
 
@@ -456,10 +457,12 @@ class ChaletController extends Controller
         } else {
             // Check if there are any services for this chalet at all
             $allServices = DB::table($serviceTable)->where('chalet_id', $chaletId)->get();
-            \Log::info('No service record found for chalet_id: ' . $chaletId . ' and type: ' . $serviceType);
+            \Log::info('No service record found for chalet_id: ' . $chaletId . ' and type: ' . $serviceType . ' and date: ' . $serviceDate);
             \Log::info('Total services for chalet_id ' . $chaletId . ': ' . $allServices->count());
             if ($allServices->count() > 0) {
-                \Log::info('Available service dates:', $allServices->pluck('created_at')->toArray());
+                \Log::info('Available service dates:', $allServices->pluck('created_at')->map(function($date) {
+                    return \Carbon\Carbon::parse($date)->format('Y-m-d');
+                })->toArray());
             }
         }
 
@@ -481,7 +484,7 @@ class ChaletController extends Controller
             ],
             'service_info' => [
                 'type' => $this->getServiceTypeName($serviceType),
-                'date' => $serviceRecord ? $serviceRecord->created_at : $serviceDate,
+                'date' => $serviceDate,
                 'has_record' => (bool) $serviceRecord,
                 'record_id' => $serviceRecord ? $serviceRecord->id : null,
             ],
@@ -534,8 +537,9 @@ class ChaletController extends Controller
         // جلب بيانات الشاليه
         $chalet = Chalet::find($chaletId);
 
-        // البحث عن أحدث سجل تلفيات للشاليه
+        // البحث عن سجل التلفيات في التاريخ المحدد
         $damageRecord = Damage::where('chalet_id', $chaletId)
+            ->whereDate('created_at', $damageDate)
             ->with(['images', 'videos'])
             ->orderBy('created_at', 'desc')
             ->first();
@@ -582,7 +586,9 @@ class ChaletController extends Controller
             \Log::info('No damage record found for chalet_id: ' . $chaletId . ' and date: ' . $damageDate);
             \Log::info('Total damages for chalet_id ' . $chaletId . ': ' . $allDamages->count());
             if ($allDamages->count() > 0) {
-                \Log::info('Available damage dates:', $allDamages->pluck('created_at')->toArray());
+                \Log::info('Available damage dates:', $allDamages->pluck('created_at')->map(function($date) {
+                    return $date->format('Y-m-d');
+                })->toArray());
             }
         }
 
@@ -604,7 +610,7 @@ class ChaletController extends Controller
             ],
             'damage_info' => [
                 'type' => 'تقرير تلفيات',
-                'date' => $damageRecord ? $damageRecord->created_at->format('Y-m-d') : $damageDate,
+                'date' => $damageDate,
                 'has_record' => (bool) $damageRecord,
                 'record_id' => $damageRecord ? $damageRecord->id : null,
             ],
