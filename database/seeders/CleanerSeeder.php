@@ -23,6 +23,7 @@ class CleanerSeeder extends Seeder
                 'hire_date' => '2023-01-15',
                 'status' => 'active',
                 'image' => null,
+                'fcm_token' => 'test_fcm_token_ahmed_123456789',
             ],
             [
                 'name' => 'فاطمة علي',
@@ -34,6 +35,7 @@ class CleanerSeeder extends Seeder
                 'hire_date' => '2023-03-20',
                 'status' => 'active',
                 'image' => null,
+                'fcm_token' => 'test_fcm_token_fatima_987654321',
             ],
             [
                 'name' => 'محمد عبدالله',
@@ -45,6 +47,7 @@ class CleanerSeeder extends Seeder
                 'hire_date' => '2023-06-10',
                 'status' => 'active',
                 'image' => null,
+                'fcm_token' => 'test_fcm_token_mohammed_1122334455',
             ],
         ];
 

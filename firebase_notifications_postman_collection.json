@@ -1,0 +1,480 @@
+{
+  "info": {
+    "name": "Firebase Notifications API Collection",
+    "description": "مجموعة APIs الإشعارات في Firebase للمشروع",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000/api",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+966501234567\",\n  \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/login",
+              "host": ["{{base_url}}"],
+              "path": ["login"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications Management",
+      "item": [
+        {
+          "name": "Get All Notifications",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            }
+          }
+        },
+        {
+          "name": "Get Notification Stats",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/stats",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "stats"]
+            }
+          }
+        },
+        {
+          "name": "Get Single Notification",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/1",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "1"]
+            }
+          }
+        },
+        {
+          "name": "Mark Notification as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/1/read",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "1", "read"]
+            }
+          }
+        },
+        {
+          "name": "Mark All Notifications as Read",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/read-all",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "read-all"]
+            }
+          }
+        },
+        {
+          "name": "Delete Single Notification",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/1",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete All Notifications",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications",
+              "host": ["{{base_url}}"],
+              "path": ["notifications"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "FCM Token Management",
+      "item": [
+        {
+          "name": "Update FCM Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"dGVzdF9mY21fdG9rZW5fZXhhbXBsZQ==\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/notifications/fcm-token",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "fcm-token"]
+            }
+          }
+        },
+        {
+          "name": "Update FCM Token (Auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcm_token\": \"dGVzdF9mY21fdG9rZW5fZXhhbXBsZQ==\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/fcm-token",
+              "host": ["{{base_url}}"],
+              "path": ["fcm-token"]
+            }
+          }
+        },
+        {
+          "name": "Remove FCM Token",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/fcm-token",
+              "host": ["{{base_url}}"],
+              "path": ["fcm-token"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Test Notifications",
+      "item": [
+        {
+          "name": "Send Test Notification to All",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"إشعار تجريبي\",\n  \"body\": \"هذا إشعار تجريبي لاختبار نظام الإشعارات\",\n  \"cleaner_id\": null\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/notification",
+              "host": ["{{base_url}}"],
+              "path": ["test", "notification"]
+            }
+          }
+        },
+        {
+          "name": "Send Test Notification to Specific Cleaner",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"إشعار تجريبي\",\n  \"body\": \"هذا إشعار تجريبي لاختبار نظام الإشعارات\",\n  \"cleaner_id\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/test/notification",
+              "host": ["{{base_url}}"],
+              "path": ["test", "notification"]
+            }
+          }
+        },
+        {
+          "name": "Test Firebase Configuration",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/test/firebase-config",
+              "host": ["{{base_url}}"],
+              "path": ["test", "firebase-config"]
+            }
+          }
+        },
+        {
+          "name": "Send Test Notification (User)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/notifications/test",
+              "host": ["{{base_url}}"],
+              "path": ["notifications", "test"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service Notifications",
+      "item": [
+        {
+          "name": "Regular Cleaning Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chalet_id\": 1,\n  \"cleaning_date\": \"2024-01-15\",\n  \"notes\": \"تنظيف منتظم للشاليه\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/regular-cleanings",
+              "host": ["{{base_url}}"],
+              "path": ["regular-cleanings"]
+            }
+          }
+        },
+        {
+          "name": "Deep Cleaning Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chalet_id\": 1,\n  \"cleaning_date\": \"2024-01-15\",\n  \"notes\": \"تنظيف عميق للشاليه\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/deep-cleanings",
+              "host": ["{{base_url}}"],
+              "path": ["deep-cleanings"]
+            }
+          }
+        },
+        {
+          "name": "Maintenance Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chalet_id\": 1,\n  \"maintenance_type\": \"electrical\",\n  \"description\": \"صيانة كهربائية للشاليه\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/services/upload",
+              "host": ["{{base_url}}"],
+              "path": ["services", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Pest Control Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chalet_id\": 1,\n  \"pest_type\": \"cockroaches\",\n  \"treatment_date\": \"2024-01-15\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/services/upload",
+              "host": ["{{base_url}}"],
+              "path": ["services", "upload"]
+            }
+          }
+        },
+        {
+          "name": "Damage Report Notification",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{auth_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"chalet_id\": 1,\n  \"damage_type\": \"furniture\",\n  \"description\": \"تلف في الأثاث\",\n  \"severity\": \"medium\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/damages/upload",
+              "host": ["{{base_url}}"],
+              "path": ["damages", "upload"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

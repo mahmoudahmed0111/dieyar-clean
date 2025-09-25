@@ -33,7 +33,7 @@ class NotificationController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
 
-            return $this->successResponse([
+            return $this->apiResponse([
                 'notifications' => $notifications->items(),
                 'pagination' => [
                     'current_page' => $notifications->currentPage(),
@@ -43,7 +43,7 @@ class NotificationController extends Controller
                 ]
             ], 'تم جلب الإشعارات بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء جلب الإشعارات', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء جلب الإشعارات', 500);
         }
     }
 
@@ -60,7 +60,7 @@ class NotificationController extends Controller
                 ->first();
 
             if (!$notification) {
-                return $this->errorResponse('الإشعار غير موجود', 404);
+                return $this->apiResponse(null, 'الإشعار غير موجود', 404);
             }
 
             // تحديد الإشعار كمقروء
@@ -68,9 +68,9 @@ class NotificationController extends Controller
                 $notification->markAsRead();
             }
 
-            return $this->successResponse($notification, 'تم جلب الإشعار بنجاح');
+            return $this->apiResponse($notification, 'تم جلب الإشعار بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء جلب الإشعار', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء جلب الإشعار', 500);
         }
     }
 
@@ -87,14 +87,14 @@ class NotificationController extends Controller
                 ->first();
 
             if (!$notification) {
-                return $this->errorResponse('الإشعار غير موجود', 404);
+                return $this->apiResponse(null, 'الإشعار غير موجود', 404);
             }
 
             $notification->markAsRead();
 
-            return $this->successResponse(null, 'تم تحديد الإشعار كمقروء بنجاح');
+            return $this->apiResponse(null, 'تم تحديد الإشعار كمقروء بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء تحديد الإشعار كمقروء', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء تحديد الإشعار كمقروء', 500);
         }
     }
 
@@ -110,9 +110,9 @@ class NotificationController extends Controller
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
 
-            return $this->successResponse(null, 'تم تحديد جميع الإشعارات كمقروءة بنجاح');
+            return $this->apiResponse(null, 'تم تحديد جميع الإشعارات كمقروءة بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء تحديد الإشعارات كمقروءة', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء تحديد الإشعارات كمقروءة', 500);
         }
     }
 
@@ -129,14 +129,14 @@ class NotificationController extends Controller
                 ->first();
 
             if (!$notification) {
-                return $this->errorResponse('الإشعار غير موجود', 404);
+                return $this->apiResponse(null, 'الإشعار غير موجود', 404);
             }
 
             $notification->delete();
 
-            return $this->successResponse(null, 'تم حذف الإشعار بنجاح');
+            return $this->apiResponse(null, 'تم حذف الإشعار بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء حذف الإشعار', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء حذف الإشعار', 500);
         }
     }
 
@@ -150,9 +150,9 @@ class NotificationController extends Controller
 
             Notification::where('cleaner_id', $cleaner->id)->delete();
 
-            return $this->successResponse(null, 'تم حذف جميع الإشعارات بنجاح');
+            return $this->apiResponse(null, 'تم حذف جميع الإشعارات بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء حذف الإشعارات', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء حذف الإشعارات', 500);
         }
     }
 
@@ -169,9 +169,9 @@ class NotificationController extends Controller
             $cleaner = Auth::user();
             $cleaner->update(['fcm_token' => $request->fcm_token]);
 
-            return $this->successResponse(null, 'تم تحديث رمز الجهاز بنجاح');
+            return $this->apiResponse(null, 'تم تحديث رمز الجهاز بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء تحديث رمز الجهاز', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء تحديث رمز الجهاز', 500);
         }
     }
 
@@ -189,13 +189,13 @@ class NotificationController extends Controller
                 ->count();
             $readNotifications = $totalNotifications - $unreadNotifications;
 
-            return $this->successResponse([
+            return $this->apiResponse([
                 'total' => $totalNotifications,
                 'unread' => $unreadNotifications,
                 'read' => $readNotifications
             ], 'تم جلب إحصائيات الإشعارات بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء جلب إحصائيات الإشعارات', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء جلب إحصائيات الإشعارات', 500);
         }
     }
 
@@ -217,9 +217,9 @@ class NotificationController extends Controller
 
             $this->firebaseService->sendToCleaner($cleaner, $title, $body, $data);
 
-            return $this->successResponse(null, 'تم إرسال الإشعار التجريبي بنجاح');
+            return $this->apiResponse(null, 'تم إرسال الإشعار التجريبي بنجاح');
         } catch (\Exception $e) {
-            return $this->errorResponse('حدث خطأ أثناء إرسال الإشعار التجريبي', 500);
+            return $this->apiResponse(null, 'حدث خطأ أثناء إرسال الإشعار التجريبي', 500);
         }
     }
 }

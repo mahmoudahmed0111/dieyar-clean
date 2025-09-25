@@ -44,7 +44,31 @@ class FirebaseNotificationService
 
         if ($cleaners->isEmpty()) {
             Log::info('No active cleaners with FCM tokens found');
-            return false;
+            // إرسال إشعار لجميع عمال النظافة النشطين حتى لو لم يكن لديهم FCM tokens
+            $allCleaners = Cleaner::where('status', 'active')
+                ->when($excludeCleanerId, function ($query) use ($excludeCleanerId) {
+                    return $query->where('id', '!=', $excludeCleanerId);
+                })
+                ->get();
+            
+            if ($allCleaners->isEmpty()) {
+                return false;
+            }
+            
+            // حفظ الإشعارات في قاعدة البيانات حتى لو لم يكن هناك FCM tokens
+            foreach ($allCleaners as $cleaner) {
+                Notification::create([
+                    'cleaner_id' => $cleaner->id,
+                    'title' => $title,
+                    'body' => $body,
+                    'type' => $data['type'] ?? 'general',
+                    'data' => $data,
+                    'fcm_token' => null,
+                ]);
+            }
+            
+            Log::info("Notifications saved to database for {$allCleaners->count()} cleaners without FCM tokens");
+            return true;
         }
 
         $successCount = 0;
@@ -71,6 +95,8 @@ class FirebaseNotificationService
                 Log::error("Failed to send notification to cleaner: {$cleaner->id}", [
                     'response' => $response ? $response->body() : 'No response'
                 ]);
+                // الإشعار محفوظ في قاعدة البيانات حتى لو فشل إرسال FCM
+                Log::info("Notification saved to database for cleaner: {$cleaner->id} (FCM failed)");
             }
         }
 
@@ -83,11 +109,7 @@ class FirebaseNotificationService
      */
     public function sendToCleaner(Cleaner $cleaner, $title, $body, $data = [])
     {
-        if (!$cleaner->fcm_token) {
-            Log::warning("No FCM token for cleaner: {$cleaner->id}");
-            return false;
-        }
-
+        // حفظ الإشعار في قاعدة البيانات دائماً
         $notification = Notification::create([
             'cleaner_id' => $cleaner->id,
             'title' => $title,
@@ -96,6 +118,11 @@ class FirebaseNotificationService
             'data' => $data,
             'fcm_token' => $cleaner->fcm_token,
         ]);
+
+        if (!$cleaner->fcm_token) {
+            Log::warning("No FCM token for cleaner: {$cleaner->id}, but notification saved to database");
+            return true; // الإشعار محفوظ في قاعدة البيانات
+        }
 
         $response = $this->sendFCMNotification($cleaner->fcm_token, $title, $body, $data);
 
@@ -107,7 +134,9 @@ class FirebaseNotificationService
             Log::error("Failed to send notification to cleaner: {$cleaner->id}", [
                 'response' => $response ? $response->body() : 'No response'
             ]);
-            return false;
+            // الإشعار محفوظ في قاعدة البيانات حتى لو فشل إرسال FCM
+            Log::info("Notification saved to database for cleaner: {$cleaner->id} (FCM failed)");
+            return true; // الإشعار محفوظ في قاعدة البيانات
         }
     }
 

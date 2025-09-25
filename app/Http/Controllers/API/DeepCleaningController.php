@@ -7,8 +7,10 @@ use App\Models\DeepCleaning;
 use App\Models\DeepCleaningImage;
 use App\Models\DeepCleaningVideo;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class DeepCleaningController extends Controller
 {
@@ -110,6 +112,29 @@ class DeepCleaningController extends Controller
             $uploadedImages[] = $uploadedImage;
         }
 
+        // إرسال إشعار لجميع عمال النظافة الآخرين
+        try {
+            $firebaseService = new FirebaseNotificationService();
+            $cleaner = $request->user();
+            $chalet = $deepCleaning->chalet;
+            
+            $title = 'رفع صور تنظيف عميق';
+            $body = "قام {$cleaner->name} برفع صور للتنظيف العميق للشاليه: {$chalet->name}";
+            
+            $data = [
+                'type' => 'deep_cleaning_images',
+                'cleaning_id' => $deepCleaning->id,
+                'chalet_id' => $deepCleaning->chalet_id,
+                'chalet_name' => $chalet->name,
+                'cleaner_name' => $cleaner->name,
+                'images_count' => count($uploadedImages),
+            ];
+            
+            $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+        } catch (\Exception $e) {
+            Log::error('Error sending deep cleaning images notification: ' . $e->getMessage());
+        }
+
         return $this->apiResponse($uploadedImages, 'تم رفع الصور بنجاح');
     }
 
@@ -134,6 +159,29 @@ class DeepCleaningController extends Controller
             ]);
 
             $uploadedVideos[] = $uploadedVideo;
+        }
+
+        // إرسال إشعار لجميع عمال النظافة الآخرين
+        try {
+            $firebaseService = new FirebaseNotificationService();
+            $cleaner = $request->user();
+            $chalet = $deepCleaning->chalet;
+            
+            $title = 'رفع فيديوهات تنظيف عميق';
+            $body = "قام {$cleaner->name} برفع فيديوهات للتنظيف العميق للشاليه: {$chalet->name}";
+            
+            $data = [
+                'type' => 'deep_cleaning_videos',
+                'cleaning_id' => $deepCleaning->id,
+                'chalet_id' => $deepCleaning->chalet_id,
+                'chalet_name' => $chalet->name,
+                'cleaner_name' => $cleaner->name,
+                'videos_count' => count($uploadedVideos),
+            ];
+            
+            $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+        } catch (\Exception $e) {
+            Log::error('Error sending deep cleaning videos notification: ' . $e->getMessage());
         }
 
         return $this->apiResponse($uploadedVideos, 'تم رفع الفيديوهات بنجاح');

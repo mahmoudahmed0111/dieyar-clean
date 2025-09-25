@@ -7,8 +7,10 @@ use App\Models\RegularCleaning;
 use App\Models\RegularCleaningImage;
 use App\Models\RegularCleaningVideo;
 use App\Http\Controllers\API\ResponseTrait;
+use App\Services\FirebaseNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 
 class RegularCleaningController extends Controller
 {
@@ -108,6 +110,29 @@ class RegularCleaningController extends Controller
             $uploadedImages[] = $uploadedImage;
         }
 
+        // إرسال إشعار لجميع عمال النظافة الآخرين
+        try {
+            $firebaseService = new FirebaseNotificationService();
+            $cleaner = $request->user();
+            $chalet = $regularCleaning->chalet;
+            
+            $title = 'رفع صور تنظيف منتظم';
+            $body = "قام {$cleaner->name} برفع صور للتنظيف المنتظم للشاليه: {$chalet->name}";
+            
+            $data = [
+                'type' => 'regular_cleaning_images',
+                'cleaning_id' => $regularCleaning->id,
+                'chalet_id' => $regularCleaning->chalet_id,
+                'chalet_name' => $chalet->name,
+                'cleaner_name' => $cleaner->name,
+                'images_count' => count($uploadedImages),
+            ];
+            
+            $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+        } catch (\Exception $e) {
+            Log::error('Error sending regular cleaning images notification: ' . $e->getMessage());
+        }
+
         return $this->apiResponse($uploadedImages, 'تم رفع الصور بنجاح');
     }
 
@@ -132,6 +157,29 @@ class RegularCleaningController extends Controller
             ]);
 
             $uploadedVideos[] = $uploadedVideo;
+        }
+
+        // إرسال إشعار لجميع عمال النظافة الآخرين
+        try {
+            $firebaseService = new FirebaseNotificationService();
+            $cleaner = $request->user();
+            $chalet = $regularCleaning->chalet;
+            
+            $title = 'رفع فيديوهات تنظيف منتظم';
+            $body = "قام {$cleaner->name} برفع فيديوهات للتنظيف المنتظم للشاليه: {$chalet->name}";
+            
+            $data = [
+                'type' => 'regular_cleaning_videos',
+                'cleaning_id' => $regularCleaning->id,
+                'chalet_id' => $regularCleaning->chalet_id,
+                'chalet_name' => $chalet->name,
+                'cleaner_name' => $cleaner->name,
+                'videos_count' => count($uploadedVideos),
+            ];
+            
+            $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+        } catch (\Exception $e) {
+            Log::error('Error sending regular cleaning videos notification: ' . $e->getMessage());
         }
 
         return $this->apiResponse($uploadedVideos, 'تم رفع الفيديوهات بنجاح');

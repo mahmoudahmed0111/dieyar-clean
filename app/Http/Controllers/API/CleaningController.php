@@ -249,6 +249,34 @@ class CleaningController extends Controller
                 ];
             }
 
+            // إرسال إشعار لجميع عمال النظافة الآخرين
+            try {
+                $firebaseService = new FirebaseNotificationService();
+                $cleaner = $request->user();
+                $chalet = Chalet::find($chaletId);
+                
+                $cleaningTypeText = $cleaningType === 'regular' ? 'تنظيف منتظم' : 'تنظيف عميق';
+                $timeText = $cleaningTime === 'before' ? 'قبل' : 'بعد';
+                
+                $title = "رفع {$cleaningTypeText} {$timeText} النظافة";
+                $body = "قام {$cleaner->name} برفع {$cleaningTypeText} {$timeText} النظافة للشاليه: {$chalet->name}";
+                
+                $data = [
+                    'type' => $cleaningType === 'regular' ? 'regular_cleaning' : 'deep_cleaning',
+                    'cleaning_id' => $cleaningRecord->id,
+                    'chalet_id' => $chaletId,
+                    'chalet_name' => $chalet->name,
+                    'cleaner_name' => $cleaner->name,
+                    'cleaning_time' => $cleaningTime,
+                    'images_count' => count($uploadedImages),
+                    'videos_count' => count($uploadedVideos),
+                ];
+                
+                $firebaseService->sendToAllCleaners($title, $body, $data, $cleaner->id);
+            } catch (\Exception $e) {
+                Log::error('Error sending cleaning notification: ' . $e->getMessage());
+            }
+
             $message = 'تم رفع ' . ($cleaningTime === 'before' ? 'الصور والفيديوهات قبل' : 'الصور والفيديوهات بعد') . ' النظافة بنجاح';
 
             return $this->apiResponse(null, $message, 201);
