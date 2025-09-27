@@ -33,8 +33,14 @@ class NotificationController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->paginate(20);
 
+            // إضافة متغير read لكل إشعار
+            $notificationsWithReadStatus = $notifications->items();
+            foreach ($notificationsWithReadStatus as $notification) {
+                $notification->read = !is_null($notification->read_at);
+            }
+
             return $this->apiResponse([
-                'notifications' => $notifications->items(),
+                'notifications' => $notificationsWithReadStatus,
                 'pagination' => [
                     'current_page' => $notifications->currentPage(),
                     'last_page' => $notifications->lastPage(),
